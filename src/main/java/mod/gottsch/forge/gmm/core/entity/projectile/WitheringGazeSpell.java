@@ -68,7 +68,7 @@ public class WitheringGazeSpell extends GMMHurtingProjectile implements ItemSupp
 		if (!this.level().isClientSide) {
 			Entity target = hitResult.getEntity();
 			Entity ownerEntity = this.getOwner();
-			target.hurt(GMMDamageTypes.source(level(), GMMDamageTypes.WITHERING_GAZE_SPELL),
+			target.hurt(GMMDamageTypes.source(level(), GMMDamageTypes.WITHERING_GAZE_SPELL, this, ownerEntity),
 					(int) MobConfigHelper.get(this).number("damage", 8.0));
 			if (target instanceof LivingEntity) {
 				this.doEnchantDamageEffects((LivingEntity) ownerEntity, target);

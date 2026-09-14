@@ -129,7 +129,7 @@ public class DisintegrateSpell extends GMMHurtingProjectile implements ItemSuppl
 		if (!this.level().isClientSide) {
 			Entity target = hitResult.getEntity();
 			Entity ownerEntity = this.getOwner();
-			target.hurt(GMMDamageTypes.source(level(), GMMDamageTypes.DISINTEGRATE_SPELL), (float) MobConfigHelper.get(this).number("damage", 8.0));
+			target.hurt(GMMDamageTypes.source(level(), GMMDamageTypes.DISINTEGRATE_SPELL, this, ownerEntity), (float) MobConfigHelper.get(this).number("damage", 8.0));
 			if (target instanceof LivingEntity) {
 				this.doEnchantDamageEffects((LivingEntity)ownerEntity, target);
 				discard();

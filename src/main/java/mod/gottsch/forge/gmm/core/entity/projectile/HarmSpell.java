@@ -81,7 +81,7 @@ public class HarmSpell extends GMMHurtingProjectile implements ItemSupplier {
 		if (!this.level().isClientSide) {
 			Entity target = hitResult.getEntity();
 			Entity ownerEntity = this.getOwner();
-			target.hurt(GMMDamageTypes.source(level(), GMMDamageTypes.HARM_SPELL), (int) MobConfigHelper.get(this).number("damage", 6.0));
+			target.hurt(GMMDamageTypes.source(level(), GMMDamageTypes.HARM_SPELL, this, ownerEntity), (int) MobConfigHelper.get(this).number("damage", 6.0));
 			if (target instanceof LivingEntity) {
 				this.doEnchantDamageEffects((LivingEntity)ownerEntity, target);
 			}

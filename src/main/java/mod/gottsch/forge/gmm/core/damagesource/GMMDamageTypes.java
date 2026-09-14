@@ -23,7 +23,9 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageType;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * {@link ResourceKey}s for GMM's spell damage types. These are data-driven — the actual
@@ -56,5 +58,24 @@ public class GMMDamageTypes {
      */
     public static DamageSource source(Level level, ResourceKey<DamageType> key) {
         return new DamageSource(level.registryAccess().registryOrThrow(Registries.DAMAGE_TYPE).getHolderOrThrow(key));
+    }
+
+    /**
+     * As {@link #source(Level, ResourceKey)}, but carrying what dealt the damage: {@code direct} is
+     * the thing that touched the victim (the spell projectile), {@code causing} is who is to blame
+     * (its caster). Either may be null.
+     *
+     * <p><strong>Use this one for anything thrown.</strong> The entity-less form has no position, and
+     * vanilla's shield test ({@code LivingEntity#isDamageSourceBlocked}) returns "not blocked" the
+     * moment {@code getSourcePosition()} is null &mdash; it cannot tell whether the attack came from
+     * in front. So a spell hurt through the bare form could never be blocked, whichever way the player
+     * faced (found 2026-09-10 from Dungeons2's Beholder). Carrying the entities also gives the kill
+     * credit, the retaliation target and the "... by X" death message their attacker, and lets the
+     * damage type's {@code when_caused_by_living_non_player} scaling apply, as it does for arrows.</p>
+     */
+    public static DamageSource source(Level level, ResourceKey<DamageType> key,
+                                      @Nullable Entity direct, @Nullable Entity causing) {
+        return new DamageSource(level.registryAccess().registryOrThrow(Registries.DAMAGE_TYPE).getHolderOrThrow(key),
+                direct, causing);
     }
 }

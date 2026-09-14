@@ -7,7 +7,150 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **The Stone Colossus could be frozen mid-rise for ever.** `IDormantMob` synched the server's
+  `tickCount` at the moment the rise began and the model measured it against its own `ageInTicks`
+  — but `tickCount` is per-side, starting when the entity was created on *that* client. A colossus
+  woken out of view, or seen after a chunk reload, read a start tick far in its own future, so the
+  blend clamped at 0 and it stayed a statue while fighting. The rise now uses the same
+  flag-and-per-side-clock shape as the slam, burst and heave: a synched `waking` boolean, the
+  server counting the window inside `DormancyGoal`, and each client starting its own clock the
+  tick it first sees the flag. `getWakeStartTick`/`setWakeStartTick`/`getDormancyTickCount` and
+  `NEVER_WOKE` are gone, replaced by `isWaking`/`setWaking`,
+  `getWakeAnimStartTick`/`setWakeAnimStartTick` and `NOT_WAKING`.
+
 ### Added
+- **Stone Colossus gem layer** (`StoneColossusGemLayer`) — the chest and belt gems drawn full-bright
+  through `RenderType.eyes`, and **gated on dormancy**: dark while the mob is scenery, lit from the
+  first tick of the rise. Unlike GMM's other eye layers this one has a gameplay job — it is how a
+  player tells a statue from a boss that has already noticed them across a room. Inherited by
+  Dungeons2's `ScaledStoneColossusRenderer` with no change there.
+- 🗿 **Stone Colossus** — a tall, lean armoured construct that stands as scenery until someone walks
+  up to it. Slow, immovable (knockback resistance 1.0) and heavily armoured rather than
+  high-health: 120 HP behind 14 armour and 6 toughness, a low attack rate, and speed under the
+  Minotaur's. Deliberately the Minotaur's opposite — that mob owns the charge, and two brutes
+  sharing one tell would be one mob with two models.
+
+  **Dormancy is the mob**, not a spawn optimisation. `IDormantMob` (modelled on `IChargingMob`,
+  and for the same reason — the pose is a client-side read) carries synched `dormant` and `waking`
+  **flags**; `DormancyGoal` holds the mob still, wakes it when a non-creative player comes within
+  8 blocks, and counts the rise out server-side.
+
+  Two things in there are worth copying for the next ambush mob:
+  - **A goal, not `setNoAi`.** NoAi stops the mob being ticked as a mob, which also stops gravity —
+    a statue spawned a block above its floor would hang there for ever. The goal claims every flag
+    the goal selector hands out at priority 0 instead, so the mob still falls, burns and takes
+    damage while owning no behaviour. It cannot starve the *target* goals, since `Mob` keeps a
+    separate `GoalSelector` for those with its own locked flags, so it clears the target each tick.
+  - **A start tick, not a countdown.** The first cut synched a counter and decremented it every
+    tick; the client saw twenty discrete values a second and the rise visibly stepped. A start tick
+    is synched once and the model measures against `ageInTicks` (`tickCount + partialTick`), so the
+    animation is smooth at any frame rate and costs one packet instead of one per tick.
+
+  `StoneColossusModel` extends `HumanoidModel` for its *animation* the way `MinotaurModel` does —
+  seven empty vanilla parts, posed by `super.setupAnim`, read back onto the real rig. Its rig
+  fields are `rig`-prefixed: same-named fields would **hide** the inherited ones rather than
+  replace them, leaving two parts one keystroke apart, one of which draws nothing. The statue is a
+  distinct pose (head bowed, shoulders forward, forearms drawn up) that the rise smoothsteps out
+  of, and the six belt cloths are pushed by the leg on their own side, each only in the direction
+  that leg can actually push it.
+
+  Damage rules are the mob's identity too: `IS_PROJECTILE` damage ×0.5 ("arrows chip, they do not
+  wound") and `minecraft:pickaxes` ×1.75 — the answer to a thing made of stone is to mine it. Any
+  damage wakes it, so it can never be shot to death as a statue. Construct: immune to poison and
+  wither, *not* fire.
+
+  GMM ships the class, rig and texture; it registers nothing, so the size it is drawn at belongs to
+  the consumer — Dungeons2 draws it at 7 blocks from a 2.75-block rig.
+
+- 🎯 **`StalkGoal`** — keeps a mob pressing toward a target it *cannot reach*, standing as close
+  under it as the floor allows instead of stopping wherever its path gave out. Written for the
+  arena case that reads worst: a player up on a ledge or gallery plinking at a melee boss that
+  stands in the middle of the room doing nothing. The stalk point is found by probing **back** from
+  the target one block at a time until the navigation reports a reachable point, so it lands under
+  the player rather than at the end of a path that quit early; the reach test and the probe are
+  both cached on cooldowns, since each is a full path search. Ranks above the melee goal — a
+  lower-priority goal can never take a flag a higher one holds — and its entry test is melee's
+  exact complement, so it can never starve a mob that could be attacking instead.
+
+- 📏 **`TallMeleeAttackGoal`** — melee reach for mobs tall enough that vanilla's test lies to them.
+  Vanilla measures one 3D distance from the mob's feet to the target's feet, which for a seven-block
+  construct counts its own height against it: a player standing level with its head is an arm's
+  length from its face and six blocks away by that arithmetic, so it never swings and instead walks
+  about below them looking for level ground (found in play, 2026-09-13). This splits the question —
+  the vanilla reach horizontally, and vertically anywhere the mob's own body spans plus a block at
+  each end. It does **not** widen the horizontal reach, so nothing becomes hittable that was not
+  already hittable from the same floor.
+
+  It also takes an optional **swing interval**, because vanilla's is a hard-coded 20 ticks inside
+  `resetAttackCooldown()` and the field it sets is private — there is no override that changes it,
+  so the goal keeps its own counter instead. A heavy mob should not swing at a light mob's rate.
+  The counter deliberately survives goal restarts: melee stops and starts constantly in a real
+  fight, and clearing it on entry would let a mob swing every time it re-engaged.
+
+- 💥 **`GroundSlamGoal`** — the Stone Colossus's signature attack: wind up with both fists overhead,
+  then hit everything in a radius at once. A single-target swing is beaten by circling; an area is
+  beaten by *distance*, which turns the fight from a dodging problem into a positioning one. The
+  wind-up is the point rather than a cost — the model raises the fists over exactly the ticks the
+  goal counts before striking (`ISlammingMob` publishes that number, so the animation and the blow
+  can never drift apart), so what the player sees **is** the timer. Damage falls off toward the rim
+  but never to nothing, knockback lifts as well as shoves, and everything caught takes Slowness.
+
+  Two consumer statics, unset by default: `damageSource` (a consumer with its own damage type gets
+  attribution, a death message and something its gear can test for) and `blockEffect` — **whether a
+  slam may break the world is a property of the world**, so a library that cannot know whose walls
+  these are breaks nothing at all until told otherwise.
+
+  Hits players and the mob's current target only, like the Annihilation Ray: a boss that knocks its
+  own escort about disarms its own encounter, and stray hits turn `HurtByTargetGoal` into infighting
+  the player watches instead of joining.
+
+- 👊 **`IBurstingMob`** — the pose hook for a mob that takes a wall down with one wound-up punch,
+  and the Stone Colossus's `burstPose`. Same timing contract as `ISlammingMob` (a synched flag, a
+  server that counts its own ticks, a client that starts its own clock on the rising edge), because
+  that contract is the fix for a real bug and not a style; **what differs is the pose, and it
+  differs in the one way that matters** — a slam drives both fists into the FLOOR, a burst drives
+  one fist horizontally into something at chest height. Reusing the slam's flag would have cost
+  nothing to write and shown a wall falling while the mob punched the ground in front of it.
+
+  The arm cocks back and **holds** — the hold is the tell, the same shape the slam's raise uses —
+  with the striking shoulder drawn back, then comes through on the impact tick while the head
+  counter-rotates and keeps watching the wall. Which fist is **synched rather than derived**: taking
+  it from the animation clock would have been free and would have let two players watching the same
+  blow see different arms, since each client's clock starts when the entity loaded there.
+
+  A mob may implement both interfaces. They must not run at once, and **the model resolves that
+  rather than the goals** — the two poses own the same arms, which is a fact about the rig that no
+  goal can see. The slam wins: it is the attack that hurts somebody, and a wall that comes down a
+  blow late costs nothing. The consumer of all this is Dungeons2's `SmashBlocksGoal`, which is where
+  the decision that these walls may be broken belongs.
+
+- 🪨 **`IHurlingMob` and `ThrowBoulderGoal`** — a heave and a throw for a mob that does NOT
+  chase. `ThrowProjectileGoal` was already there and is the wrong shape for this: it is a thrower's
+  whole fight (approach when out of range, back away when crowded, fists at point blank), and a slow
+  brute that owns one room must not retreat and already has goals for closing and for point blank.
+  What was missing is only the throw — stand still, heave, let go — so this is the narrow version.
+  It **roots** the mob for the whole blow, requires **line of sight**, and has a range FLOOR as well
+  as a ceiling, because a mob lobbing rocks at someone standing on its foot reads as broken.
+
+  The pose is the third member of the slam/burst family and shares their timing contract. It reuses
+  `ThrowProjectileGoal.ProjectileLauncher` rather than declaring a second identical interface, and
+  the projectile stays the consumer's: whether a thrown rock may break the wall it lands on is a
+  property of the world, so a library that cannot know whose walls these are throws nothing of its
+  own.
+
+### Changed
+- 🐂 **Minotaur swings every 30 ticks, not 20.** Mark, 2026-09-14: "the minotaur strikes a
+  little too fast for such a powerful swing." Twelve damage landing three times in two seconds reads
+  as a flurry rather than as a heavy blow — the same argument as the Stone Colossus's 45, scaled to
+  the faster of the two bruisers, whose threat is the charge and the pursuit rather than the weight
+  of one hit.
+- 🐂 **Minotaur now uses `TallMeleeAttackGoal`.** At 2.6 blocks it has a milder version of the same
+  problem — a player on a one-block step is measured further away than they look. Consumers that
+  replace the Minotaur's melee goal (Dungeons2 swaps it for a pursuing one) must re-add the *tall*
+  goal, not the vanilla one: `TallMeleeAttackGoal` is a `MeleeAttackGoal`, so a filter that removes
+  the latter takes this with it.
+
 - 🐂 **Minotaur** — a bull-headed brute built to close distance violently. Slow, heavy, hard to
   stagger and hard to run from: high knockback resistance, an attack that throws its target, and a
   charge (below). Ships with `MinotaurModel`, `MinotaurRenderer` and the `gmm:minotaur/weapons` item
@@ -103,7 +246,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   target"; a mob with a dormant/active split of its own overrides it. No goals are installed — a
   consumer wanting a mob to actively walk back to its post adds `MoveTowardsRestrictionGoal`.
 
+- 🎨 **Art for the Paralysis, Harm, Disintegrate and Disarm spells** —
+  `gmm:item/paralysis_spell`, `harm_spell`, `disintegrate_spell` and `disarm_spell`, animated
+  (each with its `.mcmeta`), from Dungeon Denizens (where Paralysis's is `slow.png`). gmm still
+  registers no items: a consumer registers an art-only item whose model points at the texture and sets
+  the spell's `itemSupplier`, exactly as for `rock` and `withering_gaze_spell`. Left unset, the
+  spells keep drawing as a fire charge — which reads as the wrong spell, since Fire Spout is the one
+  that really is fire.
+
+- 🎯 **`GMMDamageTypes.source(level, key, direct, causing)`** — the entity-carrying form, for
+  anything thrown. The entity-less `source(level, key)` has no position, and vanilla's shield test
+  (`LivingEntity#isDamageSourceBlocked`) answers "not blocked" the moment the source position is
+  null, because it cannot tell whether the hit came from in front.
+
 ### Changed
+- 🛡️ **Six spells now carry their caster: Harm, Disintegrate, Fire Spout, Firewall Column, Spike
+  Growth and Withering Gaze.** Each hurts through the new `source(level, key, this, owner)`. Until
+  now **no shield could block any of them**, whichever way the player faced — see the `source`
+  entry above. Carrying the entities also gives the kill credit, the retaliation target and the
+  "… by X" death message their attacker.
+
+  **Balance note:** these damage types are `when_caused_by_living_non_player`, which only scales
+  with difficulty when a living non-player caused the damage — so until now none of them scaled, and
+  now they do, as arrows always have. On Hard, Harm's 6 becomes 9. Paralysis and Rock already carried
+  their entities and are unchanged. **Bodak's Death Gaze is deliberately not changed** (it builds the
+  same entity-less source): making the Bodak's near-lethal stare shield-blockable is a balance call
+  about the Bodak, not a fix.
+
 - 👑 **The Orc Warlord now spawns in his full kit.** `Orc#finalizeSpawn` rolls each apparel bit —
   both shoulder pads, the hair, the bracers — as an independent coin flip, and the Warlord inherited
   that, so one chief in sixteen turned up wearing none of it and most turned up wearing some. The kit

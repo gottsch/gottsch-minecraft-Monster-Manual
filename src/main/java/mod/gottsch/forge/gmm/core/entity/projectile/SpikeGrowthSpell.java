@@ -197,7 +197,7 @@ public class SpikeGrowthSpell extends GMMHurtingProjectile {
 		List<LivingEntity> targets = this.level().getEntitiesOfClass(LivingEntity.class, aabb, e -> e != this.getOwner());
 		Entity ownerEntity = this.getOwner();
 		for (LivingEntity target : targets) {
-			target.hurt(GMMDamageTypes.source(level(), GMMDamageTypes.SPIKE_GROWTH_SPELL), damage);
+			target.hurt(GMMDamageTypes.source(level(), GMMDamageTypes.SPIKE_GROWTH_SPELL, this, ownerEntity), damage);
 			target.push(0.0D, knockupVelocity, 0.0D);
 			if (ownerEntity instanceof LivingEntity) {
 				this.doEnchantDamageEffects((LivingEntity) ownerEntity, target);

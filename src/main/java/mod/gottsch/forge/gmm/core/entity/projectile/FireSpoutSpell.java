@@ -148,7 +148,7 @@ public class FireSpoutSpell extends GMMHurtingProjectile implements ItemSupplier
 			Entity target = hitResult.getEntity();
 			Entity ownerEntity = this.getOwner();
 
-			target.hurt(GMMDamageTypes.source(level(), GMMDamageTypes.FIRESPOUT_SPELL), (int) MobConfigHelper.get(this).number("damage", 6.0));
+			target.hurt(GMMDamageTypes.source(level(), GMMDamageTypes.FIRESPOUT_SPELL, this, ownerEntity), (int) MobConfigHelper.get(this).number("damage", 6.0));
 			if (target instanceof LivingEntity) {
 				this.doEnchantDamageEffects((LivingEntity)ownerEntity, target);
 			}

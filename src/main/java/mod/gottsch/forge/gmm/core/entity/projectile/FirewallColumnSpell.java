@@ -156,7 +156,7 @@ public class FirewallColumnSpell extends GMMHurtingProjectile implements ItemSup
 			Entity target = hitResult.getEntity();
 			Entity ownerEntity = this.getOwner();
 
-			target.hurt(GMMDamageTypes.source(level(), GMMDamageTypes.FIREWALL_SPELL), (float) MobConfigHelper.get(this).number("damage", 4.0));
+			target.hurt(GMMDamageTypes.source(level(), GMMDamageTypes.FIREWALL_SPELL, this, ownerEntity), (float) MobConfigHelper.get(this).number("damage", 4.0));
 			if (target instanceof LivingEntity) {
 				this.doEnchantDamageEffects((LivingEntity) ownerEntity, target);
 			}

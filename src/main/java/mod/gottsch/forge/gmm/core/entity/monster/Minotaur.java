@@ -1,6 +1,7 @@
 package mod.gottsch.forge.gmm.core.entity.monster;
 
 import mod.gottsch.forge.gmm.core.entity.ai.goal.ChargeAttackGoal;
+import mod.gottsch.forge.gmm.core.entity.ai.goal.TallMeleeAttackGoal;
 import mod.gottsch.forge.gmm.core.tag.GMMTags;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
@@ -100,6 +101,17 @@ public class Minotaur extends GMMMonster implements IChargingMob {
         Arrays.fill(this.handDropChances, 0.25F);
     }
 
+    /**
+     * Ticks between melee swings, against vanilla's 20.
+     *
+     * <p>Same reasoning as the Stone Colossus's 45, scaled to a smaller mob: an axe blow worth 12
+     * damage landing three times in two seconds reads as a flurry rather than as a heavy swing
+     * (Mark, 2026-09-14: "the minotaur strikes a little too fast for such a powerful swing"). It
+     * stays well under the Colossus's because the Minotaur is the fast bruiser of the pair — its
+     * threat is the charge and the pursuit, not the weight of one blow.</p>
+     */
+    private static final int MELEE_INTERVAL_TICKS = 30;
+
     @Override
     protected void registerGoals() {
         // priority 3: above the melee goal, so a charge wins the MOVE/LOOK flags when it fires and
@@ -109,7 +121,10 @@ public class Minotaur extends GMMMonster implements IChargingMob {
                 CHARGE_WINDUP_TICKS, CHARGE_MAX_TICKS, CHARGE_COOLDOWN_TICKS,
                 CHARGE_SPEED, CHARGE_SPEED_BONUS, CHARGE_DAMAGE_BONUS,
                 CHARGE_KNOCKBACK, CHARGE_PROBABILITY));
-        this.goalSelector.addGoal(4, new MeleeAttackGoal(this, 1.0D, false));
+        // Tall enough for vanilla's feet-to-feet reach to matter: at 2.6 blocks a player on a
+        // one-block step is already measured further away than they look. Milder than the
+        // Stone Colossus's version of the same problem, same cause.
+        this.goalSelector.addGoal(4, new TallMeleeAttackGoal(this, 1.0D, false, MELEE_INTERVAL_TICKS));
         this.goalSelector.addGoal(6, new WaterAvoidingRandomStrollGoal(this, 0.8D));
         this.goalSelector.addGoal(7, new LookAtPlayerGoal(this, Player.class, 8.0F));
         this.goalSelector.addGoal(7, new RandomLookAroundGoal(this));
