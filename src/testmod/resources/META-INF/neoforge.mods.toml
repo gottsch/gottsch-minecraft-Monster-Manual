@@ -1,0 +1,17 @@
+modLoader="javafml"
+loaderVersion="[1,)"
+license="GNU GPLv3"
+
+# Dev-only reference consumer for gmm. Loaded by the run configs; never packaged into the gmm jar.
+[[mods]]
+modId="gmmtest"
+version="1.0.0"
+displayName="gmm test (reference consumer)"
+description="Registers every gmm mob and spell so gmm can be run and tested on its own."
+
+[[dependencies.gmmtest]]
+modId="gmm"
+type="required"
+versionRange="[1.1.0,)"
+ordering="AFTER"
+side="BOTH"

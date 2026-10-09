@@ -1,0 +1,23 @@
+{
+  "values": [
+    "gmmtest:ghoul",
+    "gmmtest:sewer_ghoul",
+    "gmmtest:shadow",
+    "gmmtest:shadowlord",
+    "gmmtest:skeleton_warrior",
+    "gmmtest:winged_skeleton",
+    "gmmtest:iron_skeleton",
+    "gmmtest:magma_skeleton",
+    "gmmtest:frost_skeleton",
+    "gmmtest:tainted_skeleton",
+    "gmmtest:acid_skeleton",
+    "gmmtest:electric_skeleton",
+    "gmmtest:burning_skeleton",
+    "gmmtest:bloody_bones",
+    "gmmtest:bloater",
+    "gmmtest:grave_zombie",
+    "gmmtest:wight",
+    "gmmtest:bodak",
+    "gmmtest:skeleton_champion"
+  ]
+}

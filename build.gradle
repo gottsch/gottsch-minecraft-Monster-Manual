@@ -70,6 +70,12 @@ neoForge {
             systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
         }
 
+        // headless smoke tests from the testmod (GMMSmokeTests); no EULA needed, unlike runServer
+        gameTestServer {
+            type = "gameTestServer"
+            systemProperty 'neoforge.enabledGameTestNamespaces', "${project.mod_id},gmmtest"
+        }
+
         data {
             data()
             loadedMods = [mods.gmm]
@@ -79,7 +85,7 @@ neoForge {
         testmodData {
             data()
             gameDirectory = project.file('run-testmod-data')
-            programArguments.addAll '--mod', 'gmmtest', '--all', '--output', file('src/testmod/generated/resources/').getAbsolutePath(), '--existing', file('src/testmod/resources/').getAbsolutePath()
+            programArguments.addAll '--mod', 'gmmtest', '--all', '--output', file('src/testmod/generated/resources/').getAbsolutePath(), '--existing', file('src/testmod/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
         }
 
         configureEach {
