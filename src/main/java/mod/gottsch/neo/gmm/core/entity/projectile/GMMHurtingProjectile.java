@@ -17,6 +17,10 @@
  */
 package mod.gottsch.neo.gmm.core.entity.projectile;
 
+
+
+import net.minecraft.server.level.ServerEntity;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
@@ -95,7 +99,7 @@ public abstract class GMMHurtingProjectile extends Projectile {
 	}
 
 	@Override
-	abstract protected void defineSynchedData();
+	abstract protected void defineSynchedData(SynchedEntityData.Builder builder);
 
 	public boolean shouldRenderAtSqrDistance(double distanceSq) {
 		double d0 = this.getBoundingBox().getSize() * 4.0D;
@@ -124,11 +128,11 @@ public abstract class GMMHurtingProjectile extends Projectile {
 	 */
 	public void clientSideTick() {
 		if (this.shouldBurn()) {
-			this.setSecondsOnFire(1);
+			this.igniteForSeconds(1);
 		}
 
 		HitResult hitresult = ProjectileUtil.getHitResultOnMoveVector(this, this::canHitEntity);
-		if (hitresult.getType() != HitResult.Type.MISS && !net.neoforged.neoforge.event.ForgeEventFactory.onProjectileImpact(this, hitresult)) {
+		if (hitresult.getType() != HitResult.Type.MISS && !net.neoforged.neoforge.event.EventHooks.onProjectileImpact(this, hitresult)) {
 			this.onHit(hitresult);
 		}
 
@@ -227,7 +231,7 @@ public abstract class GMMHurtingProjectile extends Projectile {
 	}
 
 	@Override
-	public Packet<ClientGamePacketListener> getAddEntityPacket() {
+	public Packet<ClientGamePacketListener> getAddEntityPacket(ServerEntity serverEntity) {
 		Entity entity = this.getOwner();
 		int i = entity == null ? 0 : entity.getId();
 		return new ClientboundAddEntityPacket(this.getId(), this.getUUID(), this.getX(), this.getY(), this.getZ(), this.getXRot(), this.getYRot(), this.getType(), i, new Vec3(this.xPower, this.yPower, this.zPower), 0D);

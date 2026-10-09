@@ -17,6 +17,12 @@
  */
 package mod.gottsch.neo.gmm.core.entity.projectile;
 
+
+
+
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.damagesource.DamageSource;
 import mod.gottsch.neo.gmm.core.config.MobConfigHelper;
 import mod.gottsch.neo.gmm.core.damagesource.GMMDamageTypes;
 import mod.gottsch.neo.gottschcore.world.WorldInfo;
@@ -103,11 +109,11 @@ public class FireSpoutSpell extends GMMHurtingProjectile implements ItemSupplier
 	public void clientSideTick() {
 
 		if (this.shouldBurn()) {
-			this.setSecondsOnFire(1);
+			this.igniteForSeconds(1);
 		}
 
 		HitResult hitresult = ProjectileUtil.getHitResultOnMoveVector(this, this::canHitEntity);
-		if (hitresult.getType() != HitResult.Type.MISS && !net.neoforged.neoforge.event.ForgeEventFactory.onProjectileImpact(this, hitresult)) {
+		if (hitresult.getType() != HitResult.Type.MISS && !net.neoforged.neoforge.event.EventHooks.onProjectileImpact(this, hitresult)) {
 			this.onHit(hitresult);
 		}
 
@@ -135,7 +141,7 @@ public class FireSpoutSpell extends GMMHurtingProjectile implements ItemSupplier
 	protected void onHit(HitResult hitResult) {
 		super.onHit(hitResult);
 		if (!WorldInfo.isClientSide(level())) {
-			boolean flag = net.neoforged.neoforge.event.ForgeEventFactory.getMobGriefingEvent(this.level(), this.getOwner());
+			boolean flag = net.neoforged.neoforge.event.EventHooks.canEntityGrief(this.level(), this.getOwner());
 			this.level().explode((Entity)null, this.getX(), this.getY(), this.getZ(), (float)getExplosionPower(), flag, flag ? Level.ExplosionInteraction.BLOCK : Level.ExplosionInteraction.NONE);
 			this.discard();
 		}
@@ -148,15 +154,16 @@ public class FireSpoutSpell extends GMMHurtingProjectile implements ItemSupplier
 			Entity target = hitResult.getEntity();
 			Entity ownerEntity = this.getOwner();
 
-			target.hurt(GMMDamageTypes.source(level(), GMMDamageTypes.FIRESPOUT_SPELL, this, ownerEntity), (int) MobConfigHelper.get(this).number("damage", 6.0));
+			DamageSource damageSource = GMMDamageTypes.source(level(), GMMDamageTypes.FIRESPOUT_SPELL, this, ownerEntity);
+			target.hurt(damageSource, (int) MobConfigHelper.get(this).number("damage", 6.0));
 			if (target instanceof LivingEntity) {
-				this.doEnchantDamageEffects((LivingEntity)ownerEntity, target);
+				EnchantmentHelper.doPostAttackEffects((ServerLevel) this.level(), target, damageSource);
 			}
 		}
 	}
 
 	public void setItem(ItemStack stack) {
-		if (!stack.is(Items.FIRE_CHARGE) || stack.hasTag()) {
+		if (!stack.is(Items.FIRE_CHARGE) || !stack.isComponentsPatchEmpty()) {
 			this.getEntityData().set(DATA_ITEM_STACK, Util.make(stack.copy(), (itemStack) -> {
 				itemStack.setCount(1);
 			}));
@@ -179,9 +186,9 @@ public class FireSpoutSpell extends GMMHurtingProjectile implements ItemSupplier
 	}
 
 	@Override
-	protected void defineSynchedData() {
-		this.getEntityData().define(DATA_ITEM_STACK, ItemStack.EMPTY);
-		this.getEntityData().define(ORIGINAL_Y, -1000);
+	protected void defineSynchedData(SynchedEntityData.Builder builder) {
+		builder.define(DATA_ITEM_STACK, ItemStack.EMPTY);
+		builder.define(ORIGINAL_Y, -1000);
 	}
 
 	@Override
@@ -189,7 +196,7 @@ public class FireSpoutSpell extends GMMHurtingProjectile implements ItemSupplier
 		super.addAdditionalSaveData(tag);
 		ItemStack itemStack = this.getItemRaw();
 		if (!itemStack.isEmpty()) {
-			tag.put("Item", itemStack.save(new CompoundTag()));
+			tag.put("Item", itemStack.save(this.registryAccess()));
 		}
 		tag.putByte("ExplosionPower", (byte)getExplosionPower());
 
@@ -201,7 +208,7 @@ public class FireSpoutSpell extends GMMHurtingProjectile implements ItemSupplier
 	@Override
 	public void readAdditionalSaveData(CompoundTag tag) {
 		super.readAdditionalSaveData(tag);
-		ItemStack itemStack = ItemStack.of(tag.getCompound("Item"));
+		ItemStack itemStack = ItemStack.parseOptional(this.registryAccess(), tag.getCompound("Item"));
 		this.setItem(itemStack);
 		if (tag.contains("ExplosionPower", 99)) {
 			this.explosionPower = tag.getByte("ExplosionPower");

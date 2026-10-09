@@ -17,6 +17,12 @@
  */
 package mod.gottsch.neo.gmm.core.entity.projectile;
 
+
+
+
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.damagesource.DamageSource;
 import mod.gottsch.neo.gmm.core.config.MobConfigHelper;
 import mod.gottsch.neo.gmm.core.damagesource.GMMDamageTypes;
 import mod.gottsch.neo.gottschcore.world.WorldInfo;
@@ -107,7 +113,7 @@ public class FirewallColumnSpell extends GMMHurtingProjectile implements ItemSup
 	public void clientSideTick() {
 
 		if (this.shouldBurn()) {
-			this.setSecondsOnFire(1);
+			this.igniteForSeconds(1);
 		}
 
 		if (WorldInfo.isClientSide(level()) && !this.particlesSpawned) {
@@ -116,7 +122,7 @@ public class FirewallColumnSpell extends GMMHurtingProjectile implements ItemSup
 		}
 
 		HitResult hitresult = ProjectileUtil.getHitResultOnMoveVector(this, this::canHitEntity);
-		if (hitresult.getType() == HitResult.Type.ENTITY && !net.neoforged.neoforge.event.ForgeEventFactory.onProjectileImpact(this, hitresult)) {
+		if (hitresult.getType() == HitResult.Type.ENTITY && !net.neoforged.neoforge.event.EventHooks.onProjectileImpact(this, hitresult)) {
 			this.onHit(hitresult);
 		}
 
@@ -156,9 +162,10 @@ public class FirewallColumnSpell extends GMMHurtingProjectile implements ItemSup
 			Entity target = hitResult.getEntity();
 			Entity ownerEntity = this.getOwner();
 
-			target.hurt(GMMDamageTypes.source(level(), GMMDamageTypes.FIREWALL_SPELL, this, ownerEntity), (float) MobConfigHelper.get(this).number("damage", 4.0));
+			DamageSource damageSource = GMMDamageTypes.source(level(), GMMDamageTypes.FIREWALL_SPELL, this, ownerEntity);
+			target.hurt(damageSource, (float) MobConfigHelper.get(this).number("damage", 4.0));
 			if (target instanceof LivingEntity) {
-				this.doEnchantDamageEffects((LivingEntity) ownerEntity, target);
+				EnchantmentHelper.doPostAttackEffects((ServerLevel) this.level(), target, damageSource);
 			}
 		}
 	}
@@ -205,8 +212,8 @@ public class FirewallColumnSpell extends GMMHurtingProjectile implements ItemSup
 	}
 
 	@Override
-	protected void defineSynchedData() {
-		this.entityData.define(ORIGIN_X, 0F);
-		this.entityData.define(ORIGIN_Z, 0F);
+	protected void defineSynchedData(SynchedEntityData.Builder builder) {
+		builder.define(ORIGIN_X, 0F);
+		builder.define(ORIGIN_Z, 0F);
 	}
 }

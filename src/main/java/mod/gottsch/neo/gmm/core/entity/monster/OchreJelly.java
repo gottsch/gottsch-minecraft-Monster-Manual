@@ -78,9 +78,8 @@ public class OchreJelly extends GMMMonster {
     /** Reads the optional {@code maxSplits} config once at (natural/spawner/summon-goal) spawn. */
     @Override
     public SpawnGroupData finalizeSpawn(ServerLevelAccessor level, DifficultyInstance difficulty,
-                                         MobSpawnType spawnType, @Nullable SpawnGroupData spawnGroupData,
-                                         @Nullable CompoundTag tag) {
-        spawnGroupData = super.finalizeSpawn(level, difficulty, spawnType, spawnGroupData, tag);
+                                         MobSpawnType spawnType, @Nullable SpawnGroupData spawnGroupData) {
+        spawnGroupData = super.finalizeSpawn(level, difficulty, spawnType, spawnGroupData);
         int maxSplits = (int) MobConfigHelper.get(this).number("maxSplits", DEFAULT_MAX_SPLITS);
         this.splitsRemaining = Math.max(0, maxSplits);
         return spawnGroupData;

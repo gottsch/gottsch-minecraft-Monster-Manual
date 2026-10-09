@@ -770,8 +770,8 @@ public class StoneColossusModel<T extends Mob> extends HumanoidModel<T> {
      */
     @Override
     public void renderToBuffer(PoseStack poseStack, VertexConsumer buffer, int packedLight,
-                               int packedOverlay, float red, float green, float blue, float alpha) {
-        this.colossus.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                               int packedOverlay, int color) {
+        this.colossus.render(poseStack, buffer, packedLight, packedOverlay, color);
     }
 
     /** The real head, not the empty vanilla stub, so head layers have something to sit on. */

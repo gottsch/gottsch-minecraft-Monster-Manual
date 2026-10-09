@@ -249,7 +249,7 @@ public class DaemonModel<T extends Entity> extends HumanlikeModel<T> {
 	}
 
 	@Override
-	public void renderToBuffer(PoseStack poseStack, VertexConsumer buffer, int packedLight, int packedOverlay, float red, float green, float blue, float alpha) {
+	public void renderToBuffer(PoseStack poseStack, VertexConsumer buffer, int packedLight, int packedOverlay, int color) {
 		daemon.render(poseStack, buffer, packedLight, packedOverlay);
 	}
 

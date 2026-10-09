@@ -22,8 +22,8 @@ import net.minecraft.core.particles.ParticleType;
 import net.minecraft.core.particles.SimpleParticleType;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredRegister;
-import net.neoforged.neoforge.registries.ForgeRegistries;
 import net.neoforged.neoforge.registries.DeferredHolder;
+import net.minecraft.core.registries.Registries;
 
 /**
  * gmm-owned particle types. Like {@link mod.gottsch.neo.gmm.core.sound.GMMSounds}, this is shared
@@ -35,18 +35,18 @@ import net.neoforged.neoforge.registries.DeferredHolder;
  */
 public class GMMParticles {
 	public static final DeferredRegister<ParticleType<?>> PARTICLES =
-			DeferredRegister.create(ForgeRegistries.PARTICLE_TYPES, GMM.MOD_ID);
+			DeferredRegister.create(Registries.PARTICLE_TYPE, GMM.MOD_ID);
 
 	/** A caustic acid droplet: hangs briefly, then falls and vanishes on contact. */
-	public static final RegistryObject<SimpleParticleType> ACID_DRIP =
+	public static final DeferredHolder<ParticleType<?>, SimpleParticleType> ACID_DRIP =
 			PARTICLES.register("acid_drip", () -> new SimpleParticleType(false) {});
 
 	/** A blood droplet — same drip behaviour as {@link #ACID_DRIP}, red teardrop sprite (Bloody Bones). */
-	public static final RegistryObject<SimpleParticleType> BLOOD_DRIP =
+	public static final DeferredHolder<ParticleType<?>, SimpleParticleType> BLOOD_DRIP =
 			PARTICLES.register("blood_drip", () -> new SimpleParticleType(false) {});
 
 	/** A short-lived, additively-lit electric spark used for lightning arcs / crackle. */
-	public static final RegistryObject<SimpleParticleType> ELECTRIC_SPARK =
+	public static final DeferredHolder<ParticleType<?>, SimpleParticleType> ELECTRIC_SPARK =
 			PARTICLES.register("electric_spark", () -> new SimpleParticleType(false) {});
 
 	/**
@@ -55,21 +55,21 @@ public class GMMParticles {
 	 * {@code BurningAuraFlameParticle}). {@code true} = always show (a telegraph shouldn't be culled by
 	 * the client's particle-density setting).
 	 */
-	public static final RegistryObject<SimpleParticleType> BURNING_AURA =
+	public static final DeferredHolder<ParticleType<?>, SimpleParticleType> BURNING_AURA =
 			PARTICLES.register("burning_aura", () -> new SimpleParticleType(true) {});
 
 	/**
 	 * A flat ooze smear left on the ground by a slow-moving mob (see {@code SlimeTrailParticle}). The
 	 * spawn velocity args (dx, dy, dz) are repurposed as an RGB tint rather than motion.
 	 */
-	public static final RegistryObject<SimpleParticleType> SLIME_TRAIL =
+	public static final DeferredHolder<ParticleType<?>, SimpleParticleType> SLIME_TRAIL =
 			PARTICLES.register("slime_trail", () -> new SimpleParticleType(false) {});
 
 	/**
 	 * A drifting, glowing eye-orb mote used for the Beholder's Enthrall charm telegraph/burst (see
 	 * {@code EnthrallGoal}), in place of the generic vanilla witch-spell particle.
 	 */
-	public static final RegistryObject<SimpleParticleType> OCULUS_ORB =
+	public static final DeferredHolder<ParticleType<?>, SimpleParticleType> OCULUS_ORB =
 			PARTICLES.register("oculus_orb", () -> new SimpleParticleType(false) {});
 
 	public static void register(IEventBus modEventBus) {

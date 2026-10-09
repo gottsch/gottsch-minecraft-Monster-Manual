@@ -87,17 +87,16 @@ public class GrayOoze extends GMMMonster {
     }
 
     @Override
-    public void defineSynchedData() {
-        super.defineSynchedData();
-        this.entityData.define(DATA_REVEAL_PROGRESS, 0.0F);
+    public void defineSynchedData(SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(DATA_REVEAL_PROGRESS, 0.0F);
     }
 
     /** Spawns already hidden, so it should already be facing a cardinal direction — see {@link #snapToCardinalFacing()}. */
     @Override
     public SpawnGroupData finalizeSpawn(ServerLevelAccessor level, DifficultyInstance difficulty,
-                                         MobSpawnType spawnType, @Nullable SpawnGroupData spawnGroupData,
-                                         @Nullable CompoundTag tag) {
-        spawnGroupData = super.finalizeSpawn(level, difficulty, spawnType, spawnGroupData, tag);
+                                         MobSpawnType spawnType, @Nullable SpawnGroupData spawnGroupData) {
+        spawnGroupData = super.finalizeSpawn(level, difficulty, spawnType, spawnGroupData);
         snapToCardinalFacing();
         return spawnGroupData;
     }
@@ -260,7 +259,7 @@ public class GrayOoze extends GMMMonster {
         }
         EquipmentSlot slot = damageable.get(this.random.nextInt(damageable.size()));
         int corrosion = (int) MobConfigHelper.get(this).number("corrosion", DEFAULT_CORROSION);
-        target.getItemBySlot(slot).hurtAndBreak(corrosion, target, e -> e.broadcastBreakEvent(slot));
+        target.getItemBySlot(slot).hurtAndBreak(corrosion, target, slot);
         return true;
     }
 

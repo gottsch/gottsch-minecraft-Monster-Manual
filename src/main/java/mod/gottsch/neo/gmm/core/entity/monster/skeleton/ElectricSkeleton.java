@@ -178,15 +178,15 @@ public class ElectricSkeleton extends GMMMonster {
         }
     }
 
+    /** Undead: Healing hurts, Harming heals, immune to Poison/Regeneration. See {@link IGMMMonster#isUndead}. */
     @Override
-    public MobType getMobType() {
-        return MobType.UNDEAD;
+    public boolean isUndead() {
+        return true;
     }
-
     @Override
     public void aiStep() {
         if (this.isSunBurnTick()) {
-            this.setSecondsOnFire(8);
+            this.igniteForSeconds(8);
         }
         // a faint crackle of stored charge so it's identifiable while alive
         if (this.level().isClientSide && this.random.nextInt(10) == 0) {
@@ -217,7 +217,7 @@ public class ElectricSkeleton extends GMMMonster {
     }
 
     @Override
-    protected float getStandingEyeHeight(Pose pose, EntityDimensions dimensions) {
-        return 1.74F;
+    protected EntityDimensions getDefaultDimensions(Pose pose) {
+        return super.getDefaultDimensions(pose).withEyeHeight(1.74F);
     }
 }

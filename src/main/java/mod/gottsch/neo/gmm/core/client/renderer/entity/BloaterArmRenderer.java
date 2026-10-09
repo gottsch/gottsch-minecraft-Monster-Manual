@@ -40,7 +40,7 @@ public class BloaterArmRenderer extends EntityRenderer<BloaterArm> {
 		float spin = (entity.getSpinTicks() + (entity.isStuck() ? 0.0F : partialTick)) * 40.0F;
 		poseStack.mulPose(Axis.XP.rotationDegrees(spin));
 		VertexConsumer vertexConsumer = buffer.getBuffer(model.renderType(TEXTURE));
-		model.renderToBuffer(poseStack, vertexConsumer, packedLight, OverlayTexture.NO_OVERLAY, 1.0F, 1.0F, 1.0F, 1.0F);
+		model.renderToBuffer(poseStack, vertexConsumer, packedLight, OverlayTexture.NO_OVERLAY,-1);
 		poseStack.popPose();
 		super.render(entity, yaw, partialTick, poseStack, buffer, packedLight);
 	}

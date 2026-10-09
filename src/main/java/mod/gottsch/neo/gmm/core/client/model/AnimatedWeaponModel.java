@@ -86,7 +86,7 @@ public class AnimatedWeaponModel<T extends AnimatedWeapon> extends EntityModel<T
     }
 
     @Override
-    public void renderToBuffer(PoseStack poseStack, VertexConsumer vertexConsumer, int packedLight, int packedOverlay, float red, float green, float blue, float alpha) {
+    public void renderToBuffer(PoseStack poseStack, VertexConsumer vertexConsumer, int packedLight, int packedOverlay, int color) {
         // intentionally empty -- hand has no cubes, ItemInHandLayer is this mob's only visual
     }
 }

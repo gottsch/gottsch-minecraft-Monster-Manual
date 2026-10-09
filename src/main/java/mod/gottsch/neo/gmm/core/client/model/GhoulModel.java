@@ -169,7 +169,7 @@ public class GhoulModel<T extends Entity> extends HumanlikeModel<T> {
 	}
 	
 	@Override
-	public void renderToBuffer(PoseStack poseStack, VertexConsumer buffer, int packedLight, int packedOverlay, float red, float green, float blue, float alpha) {
+	public void renderToBuffer(PoseStack poseStack, VertexConsumer buffer, int packedLight, int packedOverlay, int color) {
 		head.render(poseStack, buffer, packedLight, packedOverlay);
 		torso.render(poseStack, buffer, packedLight, packedOverlay);
 		leftArm.render(poseStack, buffer, packedLight, packedOverlay);

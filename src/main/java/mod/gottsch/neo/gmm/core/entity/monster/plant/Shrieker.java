@@ -102,18 +102,17 @@ public class Shrieker extends GMMMonster {
     }
 
     @Override
-    public void defineSynchedData() {
-        super.defineSynchedData();
-        this.entityData.define(DATA_ALERTING, false);
-        this.entityData.define(DATA_SWAY_INTENSITY, 0.0F);
+    public void defineSynchedData(SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(DATA_ALERTING, false);
+        builder.define(DATA_SWAY_INTENSITY, 0.0F);
     }
 
     /** Permanently rooted -- no goals, no pathing, ever. */
     @Override
     public SpawnGroupData finalizeSpawn(ServerLevelAccessor level, DifficultyInstance difficulty,
-                                         MobSpawnType spawnType, @Nullable SpawnGroupData spawnGroupData,
-                                         @Nullable CompoundTag tag) {
-        spawnGroupData = super.finalizeSpawn(level, difficulty, spawnType, spawnGroupData, tag);
+                                         MobSpawnType spawnType, @Nullable SpawnGroupData spawnGroupData) {
+        spawnGroupData = super.finalizeSpawn(level, difficulty, spawnType, spawnGroupData);
         this.setNoAi(true);
         return spawnGroupData;
     }
@@ -271,7 +270,7 @@ public class Shrieker extends GMMMonster {
         // decoded back to a 0..1 fraction client-side -- the same "repurpose an existing numeric field
         // to carry data" trick GMMParticles.SLIME_TRAIL already uses for its own RGB tint.
         int opacityAmplifier = Mth.clamp((int) Math.round(darknessOpacity() * 100.0D), 0, 100);
-        target.addEffect(new MobEffectInstance(GMMMobEffects.SHRIEKER_DARKNESS.get(), darknessSeconds() * 20, opacityAmplifier));
+        target.addEffect(new MobEffectInstance(GMMMobEffects.SHRIEKER_DARKNESS, darknessSeconds() * 20, opacityAmplifier));
         this.playSound(SoundEvents.SCULK_SHRIEKER_SHRIEK, 4.0F, 1.0F);
     }
 

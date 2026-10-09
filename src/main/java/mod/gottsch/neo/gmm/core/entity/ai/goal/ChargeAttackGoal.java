@@ -1,5 +1,13 @@
 package mod.gottsch.neo.gmm.core.entity.ai.goal;
 
+
+
+
+
+import mod.gottsch.neo.gmm.core.GMM;
+import net.minecraft.world.entity.ai.attributes.Attribute;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.core.Holder;
 import mod.gottsch.neo.gmm.core.entity.monster.IChargingMob;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.PathfinderMob;
@@ -37,8 +45,8 @@ import java.util.UUID;
  * @author Mark Gottschling on 9/7/2026
  */
 public class ChargeAttackGoal extends Goal {
-    private static final UUID SPEED_MODIFIER_ID = UUID.fromString("6f1d4c9a-3b62-4f8e-9c1d-2a7b5e0f38c4");
-    private static final UUID DAMAGE_MODIFIER_ID = UUID.fromString("b0c73e51-8a24-4d97-a3f6-1e5c9d240b7a");
+    private static final ResourceLocation SPEED_MODIFIER_ID = ResourceLocation.fromNamespaceAndPath(GMM.MOD_ID, "charge_speed");
+    private static final ResourceLocation DAMAGE_MODIFIER_ID = ResourceLocation.fromNamespaceAndPath(GMM.MOD_ID, "charge_damage");
 
     private final PathfinderMob mob;
     private final double triggerRangeMin;
@@ -149,7 +157,7 @@ public class ChargeAttackGoal extends Goal {
             this.mob.getNavigation().stop();
             if (--this.windup == 0) {
                 this.chargePoint = this.target.position();
-                applyModifier(Attributes.MOVEMENT_SPEED, SPEED_MODIFIER_ID, "gmm charge speed", this.speedBonus);
+                applyModifier(Attributes.MOVEMENT_SPEED, SPEED_MODIFIER_ID, this.speedBonus);
                 driveAtChargePoint();
             }
             return;
@@ -171,7 +179,7 @@ public class ChargeAttackGoal extends Goal {
 
     /** One hit, then the goal is done -- a charge that could connect twice would not be a charge. */
     private void impact() {
-        applyFlatModifier(Attributes.ATTACK_DAMAGE, DAMAGE_MODIFIER_ID, "gmm charge damage", this.damageBonus);
+        applyFlatModifier(Attributes.ATTACK_DAMAGE, DAMAGE_MODIFIER_ID, this.damageBonus);
         try {
             this.mob.doHurtTarget(this.target);
         } finally {
@@ -199,29 +207,26 @@ public class ChargeAttackGoal extends Goal {
     }
 
     /** Flat {@code ADDITION}: does not compound with the mob's weapon. See {@link #damageBonus}. */
-    private void applyFlatModifier(net.minecraft.world.entity.ai.attributes.Attribute attribute, UUID id,
-                                   String name, double amount) {
-        applyModifier(attribute, id, name, amount, AttributeModifier.Operation.ADDITION);
+    private void applyFlatModifier(Holder<Attribute> attribute, ResourceLocation id, double amount) {
+        applyModifier(attribute, id, amount, AttributeModifier.Operation.ADD_VALUE);
     }
 
     /** Proportional {@code MULTIPLY_BASE}: scales with the mob's own value, which is what speed wants. */
-    private void applyModifier(net.minecraft.world.entity.ai.attributes.Attribute attribute, UUID id,
-                               String name, double amount) {
-        applyModifier(attribute, id, name, amount, AttributeModifier.Operation.MULTIPLY_BASE);
+    private void applyModifier(Holder<Attribute> attribute, ResourceLocation id, double amount) {
+        applyModifier(attribute, id, amount, AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
     }
 
-    private void applyModifier(net.minecraft.world.entity.ai.attributes.Attribute attribute, UUID id,
-                               String name, double amount, AttributeModifier.Operation operation) {
+    private void applyModifier(Holder<Attribute> attribute, ResourceLocation id, double amount, AttributeModifier.Operation operation) {
         AttributeInstance instance = this.mob.getAttribute(attribute);
         if (instance == null) {
             return;
         }
         // a goal can be stopped mid-charge by something else claiming MOVE; never stack two
         instance.removeModifier(id);
-        instance.addTransientModifier(new AttributeModifier(id, name, amount, operation));
+        instance.addTransientModifier(new AttributeModifier(id, amount, operation));
     }
 
-    private void removeModifier(net.minecraft.world.entity.ai.attributes.Attribute attribute, UUID id) {
+    private void removeModifier(Holder<Attribute> attribute, ResourceLocation id) {
         AttributeInstance instance = this.mob.getAttribute(attribute);
         if (instance != null) {
             instance.removeModifier(id);

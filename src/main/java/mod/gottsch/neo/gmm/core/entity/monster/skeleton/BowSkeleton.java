@@ -1,5 +1,7 @@
 package mod.gottsch.neo.gmm.core.entity.monster.skeleton;
 
+import mod.gottsch.neo.gmm.core.entity.monster.IGMMMonster;
+
 import mod.gottsch.neo.gmm.core.entity.ai.goal.VariantPowerRangedBowAttackGoal;
 import mod.gottsch.neo.gmm.core.entity.ai.goal.target.SummonedOwnerTargetGoal;
 import mod.gottsch.neo.gmm.core.entity.monster.GMMMonster;
@@ -92,8 +94,10 @@ public abstract class BowSkeleton extends GMMMonster implements RangedAttackMob 
         return SoundEvents.SKELETON_STEP;
     }
 
-    public MobType getMobType() {
-        return MobType.UNDEAD;
+    /** Undead: Healing hurts, Harming heals, immune to Poison/Regeneration. See {@link IGMMMonster#isUndead}. */
+    @Override
+    public boolean isUndead() {
+        return true;
     }
 
     public void aiStep() {
@@ -105,7 +109,7 @@ public abstract class BowSkeleton extends GMMMonster implements RangedAttackMob 
                     if (itemstack.isDamageableItem()) {
                         itemstack.setDamageValue(itemstack.getDamageValue() + this.random.nextInt(2));
                         if (itemstack.getDamageValue() >= itemstack.getMaxDamage()) {
-                            this.broadcastBreakEvent(EquipmentSlot.HEAD);
+                            this.onEquippedItemBroken(itemstack.getItem(), EquipmentSlot.HEAD);
                             this.setItemSlot(EquipmentSlot.HEAD, ItemStack.EMPTY);
                         }
                     }
@@ -113,7 +117,7 @@ public abstract class BowSkeleton extends GMMMonster implements RangedAttackMob 
                 }
             }
             if (flag) {
-                this.setSecondsOnFire(8);
+                this.igniteForSeconds(8);
             }
         }
 
@@ -135,11 +139,11 @@ public abstract class BowSkeleton extends GMMMonster implements RangedAttackMob 
     }
 
     @Nullable
-    public SpawnGroupData finalizeSpawn(ServerLevelAccessor levelAccessor, DifficultyInstance difficultyInstance, MobSpawnType spawnType, @Nullable SpawnGroupData spawnGroupData, @Nullable CompoundTag tag) {
-        spawnGroupData = super.finalizeSpawn(levelAccessor, difficultyInstance, spawnType, spawnGroupData, tag);
+    public SpawnGroupData finalizeSpawn(ServerLevelAccessor levelAccessor, DifficultyInstance difficultyInstance, MobSpawnType spawnType, @Nullable SpawnGroupData spawnGroupData) {
+        spawnGroupData = super.finalizeSpawn(levelAccessor, difficultyInstance, spawnType, spawnGroupData);
         RandomSource randomsource = levelAccessor.getRandom();
         this.populateDefaultEquipmentSlots(randomsource, difficultyInstance);
-        this.populateDefaultEquipmentEnchantments(randomsource, difficultyInstance);
+        this.populateDefaultEquipmentEnchantments(levelAccessor, randomsource, difficultyInstance);
         this.reassessWeaponGoal();
         this.setCanPickUpLoot(randomsource.nextFloat() < 0.55F * difficultyInstance.getSpecialMultiplier());
         if (this.getItemBySlot(EquipmentSlot.HEAD).isEmpty()) {
@@ -176,10 +180,11 @@ public abstract class BowSkeleton extends GMMMonster implements RangedAttackMob 
     }
 
     public void performRangedAttack(LivingEntity entity, float power) {
-        ItemStack itemStack = this.getProjectile(this.getItemInHand(ProjectileUtil.getWeaponHoldingHand(this, item -> item instanceof net.minecraft.world.item.BowItem)));
-        AbstractArrow abstractarrow = this.getArrow(itemStack, power);
-        if (this.getMainHandItem().getItem() instanceof net.minecraft.world.item.BowItem)
-            abstractarrow = ((net.minecraft.world.item.BowItem)this.getMainHandItem().getItem()).customArrow(abstractarrow);
+        ItemStack weapon = this.getItemInHand(ProjectileUtil.getWeaponHoldingHand(this, item -> item instanceof net.minecraft.world.item.BowItem));
+        ItemStack itemStack = this.getProjectile(weapon);
+        AbstractArrow abstractarrow = this.getArrow(itemStack, power, weapon);
+        if (weapon.getItem() instanceof ProjectileWeaponItem weaponItem)
+            abstractarrow = weaponItem.customArrow(abstractarrow, itemStack, weapon);
         double d0 = entity.getX() - this.getX();
         double d1 = entity.getY(0.3333333333333333D) - abstractarrow.getY();
         double d2 = entity.getZ() - this.getZ();
@@ -189,8 +194,8 @@ public abstract class BowSkeleton extends GMMMonster implements RangedAttackMob 
         this.level().addFreshEntity(abstractarrow);
     }
 
-    protected AbstractArrow getArrow(ItemStack itemStack, float power) {
-        return ProjectileUtil.getMobArrow(this, itemStack, power);
+    protected AbstractArrow getArrow(ItemStack itemStack, float power, @Nullable ItemStack weapon) {
+        return ProjectileUtil.getMobArrow(this, itemStack, power, weapon);
     }
 
     public boolean canFireProjectileWeapon(ProjectileWeaponItem p_32144_) {
@@ -210,12 +215,9 @@ public abstract class BowSkeleton extends GMMMonster implements RangedAttackMob 
 
     }
 
-    protected float getStandingEyeHeight(Pose p_32154_, EntityDimensions p_32155_) {
-        return 1.74F;
-    }
-
-    public double getMyRidingOffset() {
-        return -0.6D;
+    @Override
+    protected EntityDimensions getDefaultDimensions(Pose pose) {
+        return super.getDefaultDimensions(pose).withEyeHeight(1.74F);
     }
 
     public boolean getBurnsInSun() {

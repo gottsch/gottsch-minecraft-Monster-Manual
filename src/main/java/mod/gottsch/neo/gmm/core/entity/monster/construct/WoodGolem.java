@@ -1,5 +1,9 @@
 package mod.gottsch.neo.gmm.core.entity.monster.construct;
 
+
+
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.server.level.ServerLevel;
 import mod.gottsch.neo.gmm.core.config.MobConfig;
 import mod.gottsch.neo.gmm.core.config.MobConfigHelper;
 import mod.gottsch.neo.gmm.core.entity.ai.goal.target.SummonedOwnerTargetGoal;
@@ -14,7 +18,6 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.MobType;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.FloatGoal;
@@ -156,15 +159,12 @@ public class WoodGolem extends GMMMonster {
                     : 0.0D;
             double knockback = Math.max(0.0D, 1.0D - targetKnockbackResistance);
             entity.setDeltaMovement(entity.getDeltaMovement().add(0.0D, 0.4F * knockback, 0.0D));
-            this.doEnchantDamageEffects(this, entity);
+            if (this.level() instanceof ServerLevel serverLevel) {
+                EnchantmentHelper.doPostAttackEffects(serverLevel, entity, damageSource);
+            }
         }
         this.playSound(SoundEvents.IRON_GOLEM_ATTACK, 1.0F, 1.0F);
         return isTargetEntityHurt;
-    }
-
-    @Override
-    public MobType getMobType() {
-        return MobType.UNDEFINED;
     }
 
     @Override

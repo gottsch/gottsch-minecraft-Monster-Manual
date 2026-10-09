@@ -33,8 +33,8 @@ public class WoodGolemRenderer<T extends WoodGolem> extends MobRenderer<T, WoodG
     }
 
     @Override
-    protected void setupRotations(T golem, PoseStack poseStack, float ageInTicks, float rotationYaw, float partialTicks) {
-        super.setupRotations(golem, poseStack, ageInTicks, rotationYaw, partialTicks);
+    protected void setupRotations(T golem, PoseStack poseStack, float ageInTicks, float rotationYaw, float partialTicks, float scale) {
+        super.setupRotations(golem, poseStack, ageInTicks, rotationYaw, partialTicks, scale);
         if (!(golem.walkAnimation.speed() < 0.01D)) {
             float f1 = golem.walkAnimation.position(partialTicks) + 6.0F;
             float f2 = (Math.abs(f1 % 13.0F - 6.5F) - 3.25F) / 3.25F;

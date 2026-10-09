@@ -239,8 +239,8 @@ public class OrcModel<T extends LivingEntity> extends HumanoidModel<T> implement
 	}
 
 	@Override
-	public void renderToBuffer(PoseStack poseStack, VertexConsumer buffer, int packedLight, int packedOverlay, float red, float green, float blue, float alpha) {
-		super.renderToBuffer(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+	public void renderToBuffer(PoseStack poseStack, VertexConsumer buffer, int packedLight, int packedOverlay, int color) {
+		super.renderToBuffer(poseStack, buffer, packedLight, packedOverlay, color);
 		orcHead.render(poseStack, buffer, packedLight, packedOverlay);
 		orcBody.render(poseStack, buffer, packedLight, packedOverlay);
 		orcLeftLeg.render(poseStack, buffer, packedLight, packedOverlay);

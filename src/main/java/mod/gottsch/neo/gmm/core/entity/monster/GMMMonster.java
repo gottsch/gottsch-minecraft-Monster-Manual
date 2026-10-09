@@ -1,5 +1,11 @@
 package mod.gottsch.neo.gmm.core.entity.monster;
 
+
+
+
+import mod.gottsch.neo.gmm.core.GMM;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.core.Holder;
 import mod.gottsch.neo.gmm.core.config.MobConfig;
 import mod.gottsch.neo.gmm.core.config.MobConfigHelper;
 import mod.gottsch.neo.gmm.core.entity.ownership.Ownership;
@@ -16,6 +22,8 @@ import net.minecraft.server.players.OldUsersConverter;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.OwnableEntity;
@@ -39,6 +47,13 @@ import java.util.function.Predicate;
  * @author by Mark Gottschling on 11/2/2025
  */
 public abstract class GMMMonster extends Monster implements OwnableEntity, IGMMMonster {
+    /**
+     * Id of the permanent random stat bonus rolled in {@code finalizeSpawn} (Orc, ghouls, Iron Skeleton).
+     * 1.21 identifies attribute modifiers by id, not by a random UUID; one id is enough because each
+     * mob adds at most one bonus per attribute. Mirrors vanilla's {@code minecraft:random_spawn_bonus}.
+     */
+    public static final ResourceLocation RANDOM_SPAWN_BONUS_ID = ResourceLocation.fromNamespaceAndPath(GMM.MOD_ID, "random_spawn_bonus");
+
     /* the owner's UUID.
      * an owner in GMM is any entity that summons or conjures another entity.
      */
@@ -65,9 +80,9 @@ public abstract class GMMMonster extends Monster implements OwnableEntity, IGMMM
     };
 
     @Override
-    public void defineSynchedData() {
-        super.defineSynchedData();
-        this.entityData.define(DATA_OWNERUUID_ID, Optional.empty());
+    public void defineSynchedData(SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(DATA_OWNERUUID_ID, Optional.empty());
     }
 
     @Override
@@ -87,9 +102,8 @@ public abstract class GMMMonster extends Monster implements OwnableEntity, IGMMM
      */
     @Override
     public SpawnGroupData finalizeSpawn(ServerLevelAccessor level, DifficultyInstance difficulty,
-                                         MobSpawnType spawnType, @Nullable SpawnGroupData spawnGroupData,
-                                         @Nullable CompoundTag tag) {
-        spawnGroupData = super.finalizeSpawn(level, difficulty, spawnType, spawnGroupData, tag);
+                                         MobSpawnType spawnType, @Nullable SpawnGroupData spawnGroupData) {
+        spawnGroupData = super.finalizeSpawn(level, difficulty, spawnType, spawnGroupData);
         applyConfigAttributes(MobConfigHelper.get(level, EntityType.getKey(this.getType())));
         trySpawnCompanions(level, spawnType);
         return spawnGroupData;
@@ -110,7 +124,7 @@ public abstract class GMMMonster extends Monster implements OwnableEntity, IGMMM
         applyAttribute(Attributes.ARMOR_TOUGHNESS, config, "armorToughness", false);
     }
 
-    private void applyAttribute(Attribute attribute, MobConfig config, String key, boolean healToFull) {
+    private void applyAttribute(Holder<Attribute> attribute, MobConfig config, String key, boolean healToFull) {
         Double value = config.properties().get(key);
         if (value == null) {
             return;
@@ -257,6 +271,20 @@ public abstract class GMMMonster extends Monster implements OwnableEntity, IGMMM
     @Override
     public List<UUID> getThralls() {
         return thralls;
+    }
+
+    /** Undead behaviour a class can give itself without a tag; see {@link IGMMMonster#isUndead}. */
+    @Override
+    public boolean isInvertedHealAndHarm() {
+        return isUndead() || super.isInvertedHealAndHarm();
+    }
+
+    @Override
+    public boolean canBeAffected(MobEffectInstance effect) {
+        if (isUndead() && (effect.is(MobEffects.POISON) || effect.is(MobEffects.REGENERATION))) {
+            return false;
+        }
+        return super.canBeAffected(effect);
     }
 
     /**

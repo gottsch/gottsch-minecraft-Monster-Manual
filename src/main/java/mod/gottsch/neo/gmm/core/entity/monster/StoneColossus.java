@@ -1,5 +1,7 @@
 package mod.gottsch.neo.gmm.core.entity.monster;
 
+
+import net.neoforged.neoforge.fluids.FluidType;
 import mod.gottsch.neo.gmm.core.entity.ai.goal.DormancyGoal;
 import mod.gottsch.neo.gmm.core.entity.ai.goal.GroundSlamGoal;
 import mod.gottsch.neo.gmm.core.entity.ai.goal.StalkGoal;
@@ -253,10 +255,13 @@ public class StoneColossus extends GMMMonster implements IDormantMob, ISlammingM
         return super.canBeAffected(effect);
     }
 
-    /** Stone does not drown, and a statue standing in a flooded room is still a statue. */
+    /**
+     * Stone does not drown, and a statue standing in a flooded room is still a statue. (1.20.1
+     * overrode {@code canBreatheUnderwater}, which 1.21 made final and tag-driven.)
+     */
     @Override
-    public boolean canBreatheUnderwater() {
-        return true;
+    public boolean canDrownInFluidType(FluidType type) {
+        return false;
     }
 
     /** No nameplate, no hitbox highlight, no pushing: it is scenery until it is not. */
@@ -273,14 +278,14 @@ public class StoneColossus extends GMMMonster implements IDormantMob, ISlammingM
     }
 
     @Override
-    public void defineSynchedData() {
-        super.defineSynchedData();
-        this.entityData.define(DORMANT, true);
-        this.entityData.define(WAKING, false);
-        this.entityData.define(SLAMMING, false);
-        this.entityData.define(BURSTING, false);
-        this.entityData.define(BURST_LEFT_FIST, false);
-        this.entityData.define(HURLING, false);
+    public void defineSynchedData(SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(DORMANT, true);
+        builder.define(WAKING, false);
+        builder.define(SLAMMING, false);
+        builder.define(BURSTING, false);
+        builder.define(BURST_LEFT_FIST, false);
+        builder.define(HURLING, false);
     }
 
     @Override

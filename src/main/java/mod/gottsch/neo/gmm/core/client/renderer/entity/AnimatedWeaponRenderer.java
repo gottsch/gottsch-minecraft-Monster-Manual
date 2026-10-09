@@ -26,8 +26,8 @@ public class AnimatedWeaponRenderer<T extends AnimatedWeapon> extends MobRendere
 	}
 
 	@Override
-	protected void setupRotations(T entity, PoseStack poseStack, float ageInTicks, float rotYaw, float partialTicks) {
-		super.setupRotations(entity, poseStack, ageInTicks, rotYaw, partialTicks);
+	protected void setupRotations(T entity, PoseStack poseStack, float ageInTicks, float rotYaw, float partialTicks, float scale) {
+		super.setupRotations(entity, poseStack, ageInTicks, rotYaw, partialTicks, scale);
 
 		// hand the partial-tick-interpolated windup blend to the model -- it drives the
 		// engaged-pose-to-raised-strike-pose lerp in setupAnim (which runs after this).

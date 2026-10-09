@@ -1,5 +1,9 @@
 package mod.gottsch.neo.gmm.core.entity.monster.skeleton;
 
+
+
+import net.minecraft.core.Holder;
+import net.minecraft.core.registries.BuiltInRegistries;
 import mod.gottsch.neo.gmm.core.config.MobConfig;
 import mod.gottsch.neo.gmm.core.config.MobConfigHelper;
 import mod.gottsch.neo.gmm.core.entity.ai.goal.RaiseShieldGoal;
@@ -30,7 +34,6 @@ import net.minecraft.world.item.SwordItem;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.block.state.BlockState;
-import net.neoforged.neoforge.registries.ForgeRegistries;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
@@ -126,7 +129,7 @@ public class SkeletonWarrior extends GMMMonster {
     }
 
     protected ItemStack selectRandomEquipment(EquipmentSlot slot) {
-        Optional<Item> equipment = ForgeRegistries.ITEMS.tags().getTag(tagForSlot(slot)).getRandomElement(this.random);
+        Optional<Item> equipment = BuiltInRegistries.ITEM.getRandomElementOf(tagForSlot(slot), this.random).map(Holder::value);
         if (equipment.isEmpty()) {
             return ItemStack.EMPTY;
         }
@@ -151,12 +154,12 @@ public class SkeletonWarrior extends GMMMonster {
 
     @Nullable
     @Override
-    public SpawnGroupData finalizeSpawn(@NotNull ServerLevelAccessor levelAccessor, @NotNull DifficultyInstance difficultyInstance, @NotNull MobSpawnType spawnType, @Nullable SpawnGroupData groupData, @Nullable CompoundTag tag) {
-        groupData = super.finalizeSpawn(levelAccessor, difficultyInstance, spawnType, groupData, tag);
+    public SpawnGroupData finalizeSpawn(@NotNull ServerLevelAccessor levelAccessor, @NotNull DifficultyInstance difficultyInstance, @NotNull MobSpawnType spawnType, @Nullable SpawnGroupData groupData) {
+        groupData = super.finalizeSpawn(levelAccessor, difficultyInstance, spawnType, groupData);
 
         RandomSource randomSource = levelAccessor.getRandom();
         this.populateDefaultEquipmentSlots(randomSource, difficultyInstance);
-        this.populateDefaultEquipmentEnchantments(randomSource, difficultyInstance);
+        this.populateDefaultEquipmentEnchantments(levelAccessor, randomSource, difficultyInstance);
 
         this.setCanPickUpLoot(true);
 
@@ -205,25 +208,25 @@ public class SkeletonWarrior extends GMMMonster {
         return SoundEvents.SKELETON_STEP;
     }
 
+    /** Undead: Healing hurts, Harming heals, immune to Poison/Regeneration. See {@link IGMMMonster#isUndead}. */
     @Override
-    public @NotNull MobType getMobType() {
-        return MobType.UNDEAD;
+    public boolean isUndead() {
+        return true;
     }
-
     // NOTE helmet protects from sun
     @Override
     public void aiStep() {
         if (this.isSunBurnTick()) {
             boolean flag = this.getItemBySlot(EquipmentSlot.HEAD).isEmpty();
             if (flag) {
-                this.setSecondsOnFire(8);
+                this.igniteForSeconds(8);
             }
         }
         super.aiStep();
     }
 
     @Override
-    protected float getStandingEyeHeight(Pose pose, EntityDimensions dimensions) {
-        return 1.74F;
+    protected EntityDimensions getDefaultDimensions(Pose pose) {
+        return super.getDefaultDimensions(pose).withEyeHeight(1.74F);
     }
 }

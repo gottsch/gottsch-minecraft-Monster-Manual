@@ -259,18 +259,18 @@ public class ShadowlordModel<T extends Mob> extends HumanoidModel<T> {
 	}
 
 	@Override
-	public void renderToBuffer(PoseStack poseStack, VertexConsumer vertexConsumer, int packedLight, int packedOverlay, float red, float green, float blue, float alpha) {
-		head.render(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
-		body.render(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
-		leftArm.render(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
-		rightArm.render(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
-		frontRobes.render(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
-		backRobes.render(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
-		leftRobe.render(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
-		rightRobe.render(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
-		frontRightRobe.render(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
-		frontLeftRobe.render(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
-		backLeftRobe.render(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
-		backRightRobe.render(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
+	public void renderToBuffer(PoseStack poseStack, VertexConsumer vertexConsumer, int packedLight, int packedOverlay, int color) {
+		head.render(poseStack, vertexConsumer, packedLight, packedOverlay, color);
+		body.render(poseStack, vertexConsumer, packedLight, packedOverlay, color);
+		leftArm.render(poseStack, vertexConsumer, packedLight, packedOverlay, color);
+		rightArm.render(poseStack, vertexConsumer, packedLight, packedOverlay, color);
+		frontRobes.render(poseStack, vertexConsumer, packedLight, packedOverlay, color);
+		backRobes.render(poseStack, vertexConsumer, packedLight, packedOverlay, color);
+		leftRobe.render(poseStack, vertexConsumer, packedLight, packedOverlay, color);
+		rightRobe.render(poseStack, vertexConsumer, packedLight, packedOverlay, color);
+		frontRightRobe.render(poseStack, vertexConsumer, packedLight, packedOverlay, color);
+		frontLeftRobe.render(poseStack, vertexConsumer, packedLight, packedOverlay, color);
+		backLeftRobe.render(poseStack, vertexConsumer, packedLight, packedOverlay, color);
+		backRightRobe.render(poseStack, vertexConsumer, packedLight, packedOverlay, color);
 	}
 }

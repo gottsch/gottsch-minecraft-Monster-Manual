@@ -117,7 +117,7 @@ public class DisarmSpell extends GMMHurtingProjectile implements ItemSupplier {
 	}
 
 	public void setItem(ItemStack stack) {
-		if (!stack.is(defaultItem()) || stack.hasTag()) {
+		if (!stack.is(defaultItem()) || !stack.isComponentsPatchEmpty()) {
 			this.getEntityData().set(DATA_ITEM_STACK, Util.make(stack.copy(), (itemStack) -> {
 				itemStack.setCount(1);
 			}));
@@ -141,8 +141,8 @@ public class DisarmSpell extends GMMHurtingProjectile implements ItemSupplier {
 	}
 
 	@Override
-	protected void defineSynchedData() {
-		this.getEntityData().define(DATA_ITEM_STACK, ItemStack.EMPTY);
+	protected void defineSynchedData(SynchedEntityData.Builder builder) {
+		builder.define(DATA_ITEM_STACK, ItemStack.EMPTY);
 	}
 
 	@Override
@@ -150,7 +150,7 @@ public class DisarmSpell extends GMMHurtingProjectile implements ItemSupplier {
 		super.addAdditionalSaveData(tag);
 		ItemStack itemstack = this.getItemRaw();
 		if (!itemstack.isEmpty()) {
-			tag.put("Item", itemstack.save(new CompoundTag()));
+			tag.put("Item", itemstack.save(this.registryAccess()));
 		}
 
 	}
@@ -158,7 +158,7 @@ public class DisarmSpell extends GMMHurtingProjectile implements ItemSupplier {
 	@Override
 	public void readAdditionalSaveData(CompoundTag tag) {
 		super.readAdditionalSaveData(tag);
-		ItemStack itemStack = ItemStack.of(tag.getCompound("Item"));
+		ItemStack itemStack = ItemStack.parseOptional(this.registryAccess(), tag.getCompound("Item"));
 		this.setItem(itemStack);
 	}
 }

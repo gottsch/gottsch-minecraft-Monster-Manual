@@ -17,6 +17,12 @@
  */
 package mod.gottsch.neo.gmm.core.entity.projectile;
 
+
+
+
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.damagesource.DamageSource;
 import mod.gottsch.neo.gmm.core.config.MobConfigHelper;
 import mod.gottsch.neo.gmm.core.effect.GMMMobEffects;
 import net.minecraft.Util;
@@ -89,18 +95,19 @@ public class ParalysisSpell extends GMMHurtingProjectile implements ItemSupplier
 		if (!this.level().isClientSide) {
 			Entity target = hitResult.getEntity();
 			Entity ownerEntity = this.getOwner();
-			target.hurt(level().damageSources().indirectMagic(this, ownerEntity), (int) MobConfigHelper.get(this).number("damage", 2.0));
+			DamageSource damageSource = level().damageSources().indirectMagic(this, ownerEntity);
+			target.hurt(damageSource, (int) MobConfigHelper.get(this).number("damage", 2.0));
 
 			if (target instanceof LivingEntity) {
 				int duration = (int) MobConfigHelper.get(this).number("duration", 30.0);
-				((LivingEntity)target).addEffect(new MobEffectInstance(GMMMobEffects.PARALYZED.get(), duration, 0, false, true, true), this);
-				this.doEnchantDamageEffects((LivingEntity)ownerEntity, target);
+				((LivingEntity)target).addEffect(new MobEffectInstance(GMMMobEffects.PARALYZED, duration, 0, false, true, true), this);
+				EnchantmentHelper.doPostAttackEffects((ServerLevel) this.level(), target, damageSource);
 			}
 		}
 	}
 
 	public void setItem(ItemStack stack) {
-		if (!stack.is(defaultItem()) || stack.hasTag()) {
+		if (!stack.is(defaultItem()) || !stack.isComponentsPatchEmpty()) {
 			this.getEntityData().set(DATA_ITEM_STACK, Util.make(stack.copy(), (itemStack) -> {
 				itemStack.setCount(1);
 			}));
@@ -123,8 +130,8 @@ public class ParalysisSpell extends GMMHurtingProjectile implements ItemSupplier
 	}
 
 	@Override
-	protected void defineSynchedData() {
-		this.getEntityData().define(DATA_ITEM_STACK, ItemStack.EMPTY);
+	protected void defineSynchedData(SynchedEntityData.Builder builder) {
+		builder.define(DATA_ITEM_STACK, ItemStack.EMPTY);
 	}
 
 	@Override
@@ -132,7 +139,7 @@ public class ParalysisSpell extends GMMHurtingProjectile implements ItemSupplier
 		super.addAdditionalSaveData(tag);
 		ItemStack itemstack = this.getItemRaw();
 		if (!itemstack.isEmpty()) {
-			tag.put("Item", itemstack.save(new CompoundTag()));
+			tag.put("Item", itemstack.save(this.registryAccess()));
 		}
 
 	}
@@ -140,7 +147,7 @@ public class ParalysisSpell extends GMMHurtingProjectile implements ItemSupplier
 	@Override
 	public void readAdditionalSaveData(CompoundTag tag) {
 		super.readAdditionalSaveData(tag);
-		ItemStack itemStack = ItemStack.of(tag.getCompound("Item"));
+		ItemStack itemStack = ItemStack.parseOptional(this.registryAccess(), tag.getCompound("Item"));
 		this.setItem(itemStack);
 	}
 }

@@ -92,9 +92,9 @@ public class WingedHumanoid extends GMMMonster implements IWingedHumanoid {
     }
 
     @Override
-    public void defineSynchedData() {
-        super.defineSynchedData();
-        this.entityData.define(DATA_MOVEMENT_STATE, (byte) VolantMovement.WALK.ordinal());
+    public void defineSynchedData(SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(DATA_MOVEMENT_STATE, (byte) VolantMovement.WALK.ordinal());
     }
 
     // NOTE flight state is intentionally not persisted: the mob always reloads

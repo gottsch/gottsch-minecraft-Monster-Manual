@@ -31,9 +31,9 @@ import java.util.UUID;
  * <b>The portability boundary.</b> Ownership state can be backed two ways: a GMM mob stores it in its
  * own fields/synced data (it implements {@link IOwnable} directly), while any other entity carries it
  * on a capability/attachment. {@link #of(Entity)} hides that split so every caller works the same for
- * a GMM mob or a vanilla one. When porting to NeoForge, only the non-GMM branch of {@link #of(Entity)}
- * (and {@link GMMCapabilities}) changes -- Forge capability becomes a Data Attachment; everything else
- * here is loader-agnostic.
+ * a GMM mob or a vanilla one. Only the non-GMM branch of {@link #of(Entity)} (and
+ * {@link GMMCapabilities}) is loader-specific: a Forge capability on 1.20.1, a NeoForge Data Attachment
+ * here. Everything else is loader-agnostic.
  *
  * @author Mark Gottschling
  */
@@ -63,13 +63,17 @@ public final class Ownership {
 
     /**
      * Resolves the ownership state for any entity: the entity itself if it's a GMM mob, otherwise its
-     * ownership capability, otherwise a no-op view.
+     * ownership attachment (living entities only), otherwise a no-op view.
      */
     public static IOwnable of(Entity entity) {
         if (entity instanceof IOwnable ownable) {
             return ownable;
         }
-        return entity.getCapability(GMMCapabilities.OWNERSHIP).orElse(NULL);
+        // Forge attached the capability to every living entity that isn't a GMM mob; same scope here.
+        if (entity instanceof LivingEntity living) {
+            return living.getData(GMMCapabilities.OWNERSHIP);
+        }
+        return NULL;
     }
 
     /**

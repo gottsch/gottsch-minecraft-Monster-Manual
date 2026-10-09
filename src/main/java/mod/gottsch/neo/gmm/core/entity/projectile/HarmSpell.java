@@ -17,6 +17,12 @@
  */
 package mod.gottsch.neo.gmm.core.entity.projectile;
 
+
+
+
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.damagesource.DamageSource;
 import mod.gottsch.neo.gmm.core.config.MobConfigHelper;
 import mod.gottsch.neo.gmm.core.damagesource.GMMDamageTypes;
 import net.minecraft.Util;
@@ -81,15 +87,16 @@ public class HarmSpell extends GMMHurtingProjectile implements ItemSupplier {
 		if (!this.level().isClientSide) {
 			Entity target = hitResult.getEntity();
 			Entity ownerEntity = this.getOwner();
-			target.hurt(GMMDamageTypes.source(level(), GMMDamageTypes.HARM_SPELL, this, ownerEntity), (int) MobConfigHelper.get(this).number("damage", 6.0));
+			DamageSource damageSource = GMMDamageTypes.source(level(), GMMDamageTypes.HARM_SPELL, this, ownerEntity);
+			target.hurt(damageSource, (int) MobConfigHelper.get(this).number("damage", 6.0));
 			if (target instanceof LivingEntity) {
-				this.doEnchantDamageEffects((LivingEntity)ownerEntity, target);
+				EnchantmentHelper.doPostAttackEffects((ServerLevel) this.level(), target, damageSource);
 			}
 		}
 	}
 
 	public void setItem(ItemStack stack) {
-		if (!stack.is(defaultItem()) || stack.hasTag()) {
+		if (!stack.is(defaultItem()) || !stack.isComponentsPatchEmpty()) {
 			this.getEntityData().set(DATA_ITEM_STACK, Util.make(stack.copy(), (itemStack) -> {
 				itemStack.setCount(1);
 			}));
@@ -112,8 +119,8 @@ public class HarmSpell extends GMMHurtingProjectile implements ItemSupplier {
 	}
 
 	@Override
-	protected void defineSynchedData() {
-		this.getEntityData().define(DATA_ITEM_STACK, ItemStack.EMPTY);
+	protected void defineSynchedData(SynchedEntityData.Builder builder) {
+		builder.define(DATA_ITEM_STACK, ItemStack.EMPTY);
 	}
 
 	@Override
@@ -121,7 +128,7 @@ public class HarmSpell extends GMMHurtingProjectile implements ItemSupplier {
 		super.addAdditionalSaveData(tag);
 		ItemStack itemstack = this.getItemRaw();
 		if (!itemstack.isEmpty()) {
-			tag.put("Item", itemstack.save(new CompoundTag()));
+			tag.put("Item", itemstack.save(this.registryAccess()));
 		}
 
 	}
@@ -129,7 +136,7 @@ public class HarmSpell extends GMMHurtingProjectile implements ItemSupplier {
 	@Override
 	public void readAdditionalSaveData(CompoundTag tag) {
 		super.readAdditionalSaveData(tag);
-		ItemStack itemStack = ItemStack.of(tag.getCompound("Item"));
+		ItemStack itemStack = ItemStack.parseOptional(this.registryAccess(), tag.getCompound("Item"));
 		this.setItem(itemStack);
 	}
 }

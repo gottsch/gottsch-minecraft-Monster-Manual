@@ -1,5 +1,7 @@
 package mod.gottsch.neo.gmm.core.entity.monster;
 
+
+import net.minecraft.core.Holder;
 import mod.gottsch.neo.gmm.core.config.MobConfig;
 import mod.gottsch.neo.gmm.core.config.MobConfigHelper;
 import mod.gottsch.neo.gmm.core.entity.ownership.Ownership;
@@ -17,6 +19,8 @@ import net.minecraft.tags.TagKey;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.FlyingMob;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.OwnableEntity;
@@ -66,9 +70,9 @@ public abstract class GMMFlyingMonster extends FlyingMob implements OwnableEntit
     };
 
     @Override
-    public void defineSynchedData() {
-        super.defineSynchedData();
-        this.entityData.define(DATA_OWNERUUID_ID, Optional.empty());
+    public void defineSynchedData(SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(DATA_OWNERUUID_ID, Optional.empty());
     }
 
     @Override
@@ -84,9 +88,8 @@ public abstract class GMMFlyingMonster extends FlyingMob implements OwnableEntit
      */
     @Override
     public SpawnGroupData finalizeSpawn(ServerLevelAccessor level, DifficultyInstance difficulty,
-                                         MobSpawnType spawnType, @Nullable SpawnGroupData spawnGroupData,
-                                         @Nullable CompoundTag tag) {
-        spawnGroupData = super.finalizeSpawn(level, difficulty, spawnType, spawnGroupData, tag);
+                                         MobSpawnType spawnType, @Nullable SpawnGroupData spawnGroupData) {
+        spawnGroupData = super.finalizeSpawn(level, difficulty, spawnType, spawnGroupData);
         applyConfigAttributes(MobConfigHelper.get(level, EntityType.getKey(this.getType())));
         trySpawnCompanions(level, spawnType);
         return spawnGroupData;
@@ -102,7 +105,7 @@ public abstract class GMMFlyingMonster extends FlyingMob implements OwnableEntit
         applyAttribute(Attributes.ARMOR_TOUGHNESS, config, "armorToughness", false);
     }
 
-    private void applyAttribute(Attribute attribute, MobConfig config, String key, boolean healToFull) {
+    private void applyAttribute(Holder<Attribute> attribute, MobConfig config, String key, boolean healToFull) {
         Double value = config.properties().get(key);
         if (value == null) {
             return;
@@ -233,6 +236,20 @@ public abstract class GMMFlyingMonster extends FlyingMob implements OwnableEntit
     @Override
     public List<UUID> getThralls() {
         return thralls;
+    }
+
+    /** Undead behaviour a class can give itself without a tag; see {@link IGMMMonster#isUndead}. */
+    @Override
+    public boolean isInvertedHealAndHarm() {
+        return isUndead() || super.isInvertedHealAndHarm();
+    }
+
+    @Override
+    public boolean canBeAffected(MobEffectInstance effect) {
+        if (isUndead() && (effect.is(MobEffects.POISON) || effect.is(MobEffects.REGENERATION))) {
+            return false;
+        }
+        return super.canBeAffected(effect);
     }
 
     /**

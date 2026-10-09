@@ -1,5 +1,9 @@
 package mod.gottsch.neo.gmm.core.entity.monster;
 
+
+
+import net.minecraft.core.Holder;
+import net.minecraft.core.registries.BuiltInRegistries;
 import mod.gottsch.neo.gmm.core.config.MobConfigHelper;
 import mod.gottsch.neo.gmm.core.entity.ai.goal.ThrowProjectileGoal;
 import mod.gottsch.neo.gmm.core.tag.GMMTags;
@@ -31,7 +35,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
-import net.neoforged.neoforge.registries.ForgeRegistries;
 
 import java.util.Arrays;
 import java.util.Optional;
@@ -114,28 +117,28 @@ public class Orc extends GMMMonster {
 
     @Override
     public SpawnGroupData finalizeSpawn(ServerLevelAccessor level, DifficultyInstance difficulty,
-                                        MobSpawnType spawnType, SpawnGroupData groupData, CompoundTag tag) {
+                                        MobSpawnType spawnType, SpawnGroupData groupData) {
         double healthBonus = round(random.nextDouble() * 10D, 2);
-        this.getAttribute(Attributes.MAX_HEALTH).addPermanentModifier(new AttributeModifier("random orc-spawn bonus", healthBonus, AttributeModifier.Operation.ADDITION));
+        this.getAttribute(Attributes.MAX_HEALTH).addPermanentModifier(new AttributeModifier(GMMMonster.RANDOM_SPAWN_BONUS_ID, healthBonus, AttributeModifier.Operation.ADD_VALUE));
 
         double attackBonus = round(random.nextDouble() * 2.5D, 2);
-        this.getAttribute(Attributes.ATTACK_DAMAGE).addPermanentModifier(new AttributeModifier("random orc-spawn bonus", attackBonus, AttributeModifier.Operation.ADDITION));
+        this.getAttribute(Attributes.ATTACK_DAMAGE).addPermanentModifier(new AttributeModifier(GMMMonster.RANDOM_SPAWN_BONUS_ID, attackBonus, AttributeModifier.Operation.ADD_VALUE));
 
         double armorBonus = round(random.nextDouble() * 2D, 2);
-        this.getAttribute(Attributes.ARMOR).addPermanentModifier(new AttributeModifier("random orc-spawn bonus", armorBonus, AttributeModifier.Operation.ADDITION));
+        this.getAttribute(Attributes.ARMOR).addPermanentModifier(new AttributeModifier(GMMMonster.RANDOM_SPAWN_BONUS_ID, armorBonus, AttributeModifier.Operation.ADD_VALUE));
 
         double armorToughBonus = round(random.nextDouble() * 5D, 2);
-        this.getAttribute(Attributes.ARMOR_TOUGHNESS).addPermanentModifier(new AttributeModifier("random orc-spawn bonus", armorToughBonus, AttributeModifier.Operation.ADDITION));
+        this.getAttribute(Attributes.ARMOR_TOUGHNESS).addPermanentModifier(new AttributeModifier(GMMMonster.RANDOM_SPAWN_BONUS_ID, armorToughBonus, AttributeModifier.Operation.ADD_VALUE));
 
         double knockbackResistanceBonus = random.nextDouble() * 0.1D;
-        this.getAttribute(Attributes.KNOCKBACK_RESISTANCE).addPermanentModifier(new AttributeModifier("random orc-spawn bonus", knockbackResistanceBonus, AttributeModifier.Operation.ADDITION));
+        this.getAttribute(Attributes.KNOCKBACK_RESISTANCE).addPermanentModifier(new AttributeModifier(GMMMonster.RANDOM_SPAWN_BONUS_ID, knockbackResistanceBonus, AttributeModifier.Operation.ADD_VALUE));
 
         double attackKnockbackBonus = round(random.nextDouble() * 1.5D, 2);
-        this.getAttribute(Attributes.ATTACK_KNOCKBACK).addPermanentModifier(new AttributeModifier("random orc-spawn bonus", attackKnockbackBonus, AttributeModifier.Operation.ADDITION));
+        this.getAttribute(Attributes.ATTACK_KNOCKBACK).addPermanentModifier(new AttributeModifier(GMMMonster.RANDOM_SPAWN_BONUS_ID, attackKnockbackBonus, AttributeModifier.Operation.ADD_VALUE));
 
         double chance = this.random.nextDouble() * 1.5D * (double) difficulty.getSpecialMultiplier();
         if (chance > 1.0D) {
-            this.getAttribute(Attributes.FOLLOW_RANGE).addPermanentModifier(new AttributeModifier("random orc-spawn bonus", chance, AttributeModifier.Operation.MULTIPLY_TOTAL));
+            this.getAttribute(Attributes.FOLLOW_RANGE).addPermanentModifier(new AttributeModifier(GMMMonster.RANDOM_SPAWN_BONUS_ID, chance, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL));
         }
 
         // arm the orc
@@ -203,7 +206,7 @@ public class Orc extends GMMMonster {
         if (this.random.nextInt(5) == 4) {
             this.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
         } else {
-            Optional<Item> weapon = ForgeRegistries.ITEMS.tags().getTag(GMMTags.Items.ORC_WEAPONS).getRandomElement(this.random);
+            Optional<Item> weapon = BuiltInRegistries.ITEM.getRandomElementOf(GMMTags.Items.ORC_WEAPONS, this.random).map(Holder::value);
             this.setItemSlot(EquipmentSlot.MAINHAND, weapon.map(item -> new ItemStack(item)).orElse(ItemStack.EMPTY));
         }
         this.setItemSlot(EquipmentSlot.OFFHAND, ItemStack.EMPTY);
@@ -215,10 +218,10 @@ public class Orc extends GMMMonster {
     }
 
     @Override
-    public void defineSynchedData() {
-        super.defineSynchedData();
-        this.entityData.define(DATA, (byte) 0);
-        this.entityData.define(IS_RANGED, false);
+    public void defineSynchedData(SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(DATA, (byte) 0);
+        builder.define(IS_RANGED, false);
     }
 
     @Override

@@ -111,18 +111,17 @@ public class VioletFungus extends GMMMonster {
     }
 
     @Override
-    public void defineSynchedData() {
-        super.defineSynchedData();
-        this.entityData.define(DATA_LASH_TARGET_ID, -1);
-        this.entityData.define(DATA_SWAY_INTENSITY, 0.0F);
+    public void defineSynchedData(SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(DATA_LASH_TARGET_ID, -1);
+        builder.define(DATA_SWAY_INTENSITY, 0.0F);
     }
 
     /** Permanently rooted -- no goals, no pathing, ever (same as Shrieker). */
     @Override
     public SpawnGroupData finalizeSpawn(ServerLevelAccessor level, DifficultyInstance difficulty,
-                                         MobSpawnType spawnType, @Nullable SpawnGroupData spawnGroupData,
-                                         @Nullable CompoundTag tag) {
-        spawnGroupData = super.finalizeSpawn(level, difficulty, spawnType, spawnGroupData, tag);
+                                         MobSpawnType spawnType, @Nullable SpawnGroupData spawnGroupData) {
+        spawnGroupData = super.finalizeSpawn(level, difficulty, spawnType, spawnGroupData);
         this.setNoAi(true);
         return spawnGroupData;
     }
@@ -262,9 +261,9 @@ public class VioletFungus extends GMMMonster {
 
     /** Stacking, temporary max-health drain -- identical idiom to {@code Wight#applyWither}, weaker defaults. */
     private void applyWither(LivingEntity target) {
-        MobEffectInstance existing = target.getEffect(GMMMobEffects.WITHERED.get());
+        MobEffectInstance existing = target.getEffect(GMMMobEffects.WITHERED);
         int amplifier = existing == null ? 0 : Math.min(maxWitherStacks() - 1, existing.getAmplifier() + 1);
-        target.addEffect(new MobEffectInstance(GMMMobEffects.WITHERED.get(), witherDurationTicks(), amplifier, false, true, false), this);
+        target.addEffect(new MobEffectInstance(GMMMobEffects.WITHERED, witherDurationTicks(), amplifier, false, true, false), this);
     }
 
     /**

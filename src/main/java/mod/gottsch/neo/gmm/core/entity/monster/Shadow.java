@@ -1,5 +1,9 @@
 package mod.gottsch.neo.gmm.core.entity.monster;
 
+
+
+import net.minecraft.core.Holder;
+import net.minecraft.core.registries.BuiltInRegistries;
 import mod.gottsch.neo.gmm.core.GMM;
 import mod.gottsch.neo.gmm.core.config.MobConfig;
 import mod.gottsch.neo.gmm.core.config.MobConfigHelper;
@@ -80,15 +84,15 @@ public class Shadow extends GMMMonster {
                 .add(Attributes.MOVEMENT_SPEED, 0.28F);
     }
 
+    /** Undead: Healing hurts, Harming heals, immune to Poison/Regeneration. See {@link IGMMMonster#isUndead}. */
     @Override
-    public MobType getMobType() {
-        return MobType.UNDEAD;
+    public boolean isUndead() {
+        return true;
     }
-
     @Override
     public SpawnGroupData finalizeSpawn(ServerLevelAccessor level, DifficultyInstance difficulty,
-                                        MobSpawnType spawnType, SpawnGroupData groupData, CompoundTag tag) {
-        groupData = super.finalizeSpawn(level, difficulty, spawnType, groupData, tag);
+                                        MobSpawnType spawnType, SpawnGroupData groupData) {
+        groupData = super.finalizeSpawn(level, difficulty, spawnType, groupData);
 
         RandomSource randomSource = level.getRandom();
         this.populateDefaultEquipmentSlots(randomSource, difficulty);
@@ -99,7 +103,7 @@ public class Shadow extends GMMMonster {
     @Override
     protected void populateDefaultEquipmentSlots(RandomSource randomSource, DifficultyInstance difficultyInstance) {
         this.handDropChances[EquipmentSlot.MAINHAND.getIndex()] = 0.75F;
-        Optional<Item> weapon = net.neoforged.neoforge.registries.ForgeRegistries.ITEMS.tags().getTag(GMMTags.Items.SHADOW_WEAPONS).getRandomElement(this.random);
+        Optional<Item> weapon = BuiltInRegistries.ITEM.getRandomElementOf(GMMTags.Items.SHADOW_WEAPONS, this.random).map(Holder::value);
         this.setItemSlot(EquipmentSlot.MAINHAND, weapon.map(item -> new ItemStack(item)).orElse(ItemStack.EMPTY));
     }
 
@@ -107,7 +111,7 @@ public class Shadow extends GMMMonster {
     public void aiStep() {
         // set on fire if in sun
         if (this.isSunBurnTick()) {
-            this.setSecondsOnFire(4);
+            this.igniteForSeconds(4);
         }
         super.aiStep();
     }

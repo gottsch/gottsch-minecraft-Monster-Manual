@@ -1,13 +1,14 @@
 package mod.gottsch.neo.gmm.core.effect;
 
 import mod.gottsch.neo.gmm.core.GMM;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectCategory;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredRegister;
-import net.neoforged.neoforge.registries.ForgeRegistries;
 import net.neoforged.neoforge.registries.DeferredHolder;
 
 /**
@@ -21,7 +22,7 @@ import net.neoforged.neoforge.registries.DeferredHolder;
  */
 public class GMMMobEffects {
     public static final DeferredRegister<MobEffect> EFFECTS =
-            DeferredRegister.create(ForgeRegistries.MOB_EFFECTS, GMM.MOD_ID);
+            DeferredRegister.create(Registries.MOB_EFFECT, GMM.MOD_ID);
 
     /**
      * Stacking, temporary max-health reduction -- the Wight's life-drain bite. Each amplifier level
@@ -30,12 +31,12 @@ public class GMMMobEffects {
      * {@code MobEffectInstance} duration/removal machinery re-clamps the target's health when the
      * effect expires, so no bespoke expiry tracking is needed (see {@code Wight#applyWither}).
      */
-    public static final RegistryObject<MobEffect> WITHERED = EFFECTS.register("withered",
+    public static final DeferredHolder<MobEffect, MobEffect> WITHERED = EFFECTS.register("withered",
             // MobEffect's constructor is protected (package-private-ish); the empty {} anonymous
             // subclass body is what lets a caller outside net.minecraft.world.effect invoke it.
             () -> new MobEffect(MobEffectCategory.HARMFUL, 0x4B3B47) {}
-                    .addAttributeModifier(Attributes.MAX_HEALTH, "f22b1e0a-6d1e-4e0a-9b1a-6b2c1a9d5e3a",
-                            -2.0D, AttributeModifier.Operation.ADDITION));
+                    .addAttributeModifier(Attributes.MAX_HEALTH, ResourceLocation.fromNamespaceAndPath(GMM.MOD_ID, "effect.withered"),
+                            -2.0D, AttributeModifier.Operation.ADD_VALUE));
 
     /**
      * A pure marker effect -- no attribute modifiers, no vanilla behavior -- applied by {@code Shrieker}
@@ -45,7 +46,7 @@ public class GMMMobEffects {
      * draw a capped-opacity black overlay keyed off this effect's presence/remaining duration, without
      * vanilla's own Darkness renderer ever getting involved.
      */
-    public static final RegistryObject<MobEffect> SHRIEKER_DARKNESS = EFFECTS.register("shrieker_darkness",
+    public static final DeferredHolder<MobEffect, MobEffect> SHRIEKER_DARKNESS = EFFECTS.register("shrieker_darkness",
             () -> new MobEffect(MobEffectCategory.HARMFUL, 0x1A0D24) {});
 
     /**
@@ -58,10 +59,10 @@ public class GMMMobEffects {
      * a target-can't-move root is a materially different mechanic, fitting for the "generally
      * powerful beings" (Beholder/Gazer/DeathTyrant/Spectator) that cast it.
      */
-    public static final RegistryObject<MobEffect> PARALYZED = EFFECTS.register("paralyzed",
+    public static final DeferredHolder<MobEffect, MobEffect> PARALYZED = EFFECTS.register("paralyzed",
             () -> new MobEffect(MobEffectCategory.HARMFUL, 0x8B2FC9) {}
-                    .addAttributeModifier(Attributes.MOVEMENT_SPEED, "b7b0b1b2-9c3d-4e2a-8f1a-2d6e4c9a7b1f",
-                            -1.0D, AttributeModifier.Operation.MULTIPLY_TOTAL));
+                    .addAttributeModifier(Attributes.MOVEMENT_SPEED, ResourceLocation.fromNamespaceAndPath(GMM.MOD_ID, "effect.paralyzed"),
+                            -1.0D, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL));
 
     /** Called from the GMM constructor to attach the registry to the mod event bus. */
     public static void register(IEventBus modEventBus) {

@@ -149,7 +149,7 @@ public class BurningSkeleton extends GMMMonster {
     public boolean doHurtTarget(Entity target) {
         boolean hurt = super.doHurtTarget(target);
         if (hurt && ignitesOnHit() && target instanceof LivingEntity living) {
-            living.setSecondsOnFire(meleeFireSeconds());
+            living.igniteForSeconds(meleeFireSeconds());
         }
         return hurt;
     }
@@ -159,7 +159,7 @@ public class BurningSkeleton extends GMMMonster {
         List<LivingEntity> nearby = level.getEntitiesOfClass(LivingEntity.class,
                 this.getBoundingBox().inflate(auraRange()), this::canIgnite);
         for (LivingEntity target : nearby) {
-            target.setSecondsOnFire(auraFireSeconds());
+            target.igniteForSeconds(auraFireSeconds());
         }
     }
 
@@ -198,7 +198,7 @@ public class BurningSkeleton extends GMMMonster {
         List<LivingEntity> nearby = level.getEntitiesOfClass(LivingEntity.class,
                 this.getBoundingBox().inflate(deathFireRadius()), this::canIgnite);
         for (LivingEntity target : nearby) {
-            target.setSecondsOnFire(deathFireSeconds());
+            target.igniteForSeconds(deathFireSeconds());
         }
 
         // a flash of flame + smoke at the death point
@@ -236,11 +236,11 @@ public class BurningSkeleton extends GMMMonster {
         }
     }
 
+    /** Undead: Healing hurts, Harming heals, immune to Poison/Regeneration. See {@link IGMMMonster#isUndead}. */
     @Override
-    public MobType getMobType() {
-        return MobType.UNDEAD;
+    public boolean isUndead() {
+        return true;
     }
-
     @Override
     protected void customServerAiStep() {
         super.customServerAiStep();
@@ -293,7 +293,7 @@ public class BurningSkeleton extends GMMMonster {
     }
 
     @Override
-    protected float getStandingEyeHeight(Pose pose, EntityDimensions dimensions) {
-        return 1.74F;
+    protected EntityDimensions getDefaultDimensions(Pose pose) {
+        return super.getDefaultDimensions(pose).withEyeHeight(1.74F);
     }
 }

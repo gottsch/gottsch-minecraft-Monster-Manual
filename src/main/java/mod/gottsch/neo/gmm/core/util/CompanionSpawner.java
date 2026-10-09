@@ -10,8 +10,8 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.SpawnPlacements;
 import net.minecraft.world.level.NaturalSpawner;
-import net.neoforged.neoforge.event.ForgeEventFactory;
-import net.neoforged.neoforge.registries.ForgeRegistries;
+import net.neoforged.neoforge.event.EventHooks;
+import net.minecraft.core.registries.BuiltInRegistries;
 
 import javax.annotation.Nullable;
 
@@ -58,7 +58,7 @@ public final class CompanionSpawner {
             double z = owner.getZ() + Math.sin(angle) * radius;
             BlockPos pos = BlockPos.containing(x, owner.getY(), z);
 
-            if (!NaturalSpawner.isSpawnPositionOk(SpawnPlacements.getPlacementType(type), level, pos, type)) {
+            if (!SpawnPlacements.isSpawnPositionOk(type, level, pos)) {
                 continue;
             }
             Entity entity = type.create(level);
@@ -66,7 +66,7 @@ public final class CompanionSpawner {
                 return null;
             }
             companion.moveTo(x, owner.getY(), z, random.nextFloat() * 360.0F, 0.0F);
-            ForgeEventFactory.onFinalizeSpawn(companion, level, level.getCurrentDifficultyAt(pos), MobSpawnType.MOB_SUMMONED, null, null);
+            EventHooks.finalizeMobSpawn(companion, level, level.getCurrentDifficultyAt(pos), MobSpawnType.MOB_SUMMONED, null);
             level.addFreshEntityWithPassengers(companion);
             return companion;
         }
@@ -75,10 +75,9 @@ public final class CompanionSpawner {
 
     /** Convenience overload: spawns {@code count} companions, each independently picked at random from {@code pool}. */
     public static void spawnNear(Mob owner, TagKey<EntityType<?>> pool, int count) {
-        var poolEntries = ForgeRegistries.ENTITY_TYPES.tags().getTag(pool);
         RandomSource random = owner.getRandom();
         for (int i = 0; i < count; i++) {
-            poolEntries.getRandomElement(random).ifPresent(type -> spawnNear(owner, type));
+            BuiltInRegistries.ENTITY_TYPE.getRandomElementOf(pool, random).ifPresent(type -> spawnNear(owner, type.value()));
         }
     }
 }

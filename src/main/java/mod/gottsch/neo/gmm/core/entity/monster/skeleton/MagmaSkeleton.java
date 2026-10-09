@@ -61,7 +61,7 @@ public class MagmaSkeleton extends BowSkeleton {
 
     @Override
     public SpawnGroupData finalizeSpawn(ServerLevelAccessor level, DifficultyInstance difficulty,
-                                        MobSpawnType spawnType, SpawnGroupData groupData, CompoundTag tag) {
+                                        MobSpawnType spawnType, SpawnGroupData groupData) {
         this.setLeftHanded(false);
         this.setCanPickUpLoot(false);
         this.populateDefaultEquipmentSlots(level.getRandom(), difficulty);

@@ -11,13 +11,13 @@ import java.util.function.DoubleSupplier;
  * for a monster whose reach comes from a limb rather than its body: {@code BlackPudding}'s tendril
  * lash, and (planned) the Roper/Reaper grapple tentacle.
  * <p>
- * <b>This class exists because overriding {@code Mob#getMeleeAttackRangeSqr} does not work.</b> That
- * looks like the obvious hook, and it is what other vanilla code paths consult, but in 1.20.1
- * {@link MeleeAttackGoal} never calls it — its own {@code getAttackReachSqr} recomputes the range
- * inline from {@code mob.getBbWidth()}, so a {@code Mob}-level override is silently ignored and the
- * mob keeps attacking at its default range. Verified against the 1.20.1 bytecode. The only way to
- * widen the range this goal actually uses is to override the goal's own method, which is what happens
- * here.
+ * <b>Why a goal and not only a {@code Mob} override.</b> In 1.20.1 {@link MeleeAttackGoal} ignored
+ * {@code Mob#getMeleeAttackRangeSqr} and recomputed its range inline, so the only hook was the goal's own
+ * {@code getAttackReachSqr}. 1.20.5 replaced that distance test with a bounding-box overlap
+ * ({@code Mob#isWithinMeleeAttackRange} / {@code Mob#getAttackBoundingBox}), which the goal now does
+ * consult. This goal keeps working for any mob by testing its own widened box as well, so a mob that
+ * also widens {@code getAttackBoundingBox} (as {@code BlackPudding} does) is not counted twice: the
+ * two boxes are the same size, and the test is "either one".
  * <p>
  * The bonus is supplied rather than fixed so it can be read live from a mob's config, and so a mob can
  * return zero when it should not currently have the reach at all (a Black Pudding's split children
@@ -26,6 +26,9 @@ import java.util.function.DoubleSupplier;
  * @author Mark Gottschling on 8/24/2026
  */
 public class ExtendedReachMeleeAttackGoal extends MeleeAttackGoal {
+
+    /** {@code Mob.DEFAULT_ATTACK_REACH}, which is private: how far vanilla inflates the hitbox to attack. */
+    private static final double VANILLA_ATTACK_REACH = Math.sqrt(2.04F) - 0.6F;
 
     private final DoubleSupplier reachBonusSupplier;
 
@@ -40,17 +43,18 @@ public class ExtendedReachMeleeAttackGoal extends MeleeAttackGoal {
     }
 
     /**
-     * Vanilla's value is a squared distance, so the bonus cannot simply be added to it — it has to be
-     * unsquared, extended, and squared again.
+     * Vanilla's test, OR the mob's hitbox widened by vanilla's reach plus the bonus. Horizontal only,
+     * like vanilla's: the bonus is a longer arm, not a taller one.
      */
     @Override
-    protected double getAttackReachSqr(LivingEntity target) {
-        double baseSqr = super.getAttackReachSqr(target);
+    protected boolean canPerformAttack(LivingEntity target) {
         double bonus = reachBonusSupplier.getAsDouble();
         if (bonus <= 0.0D) {
-            return baseSqr;
+            return super.canPerformAttack(target);
         }
-        double reach = Math.sqrt(baseSqr) + bonus;
-        return reach * reach;
+        double reach = VANILLA_ATTACK_REACH + bonus;
+        boolean inReach = this.mob.isWithinMeleeAttackRange(target)
+                || this.mob.getBoundingBox().inflate(reach, 0.0D, reach).intersects(target.getHitbox());
+        return this.isTimeToAttack() && inReach && this.mob.getSensing().hasLineOfSight(target);
     }
 }

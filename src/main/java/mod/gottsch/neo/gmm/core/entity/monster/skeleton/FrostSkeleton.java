@@ -1,5 +1,19 @@
 package mod.gottsch.neo.gmm.core.entity.monster.skeleton;
 
+
+
+
+
+
+
+
+import javax.annotation.Nullable;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.FrostedIceBlock;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.util.Mth;
+import net.minecraft.core.BlockPos;
 import mod.gottsch.neo.gottschcore.random.RandomHelper;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.DifficultyInstance;
@@ -15,7 +29,6 @@ import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.entity.projectile.Arrow;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.enchantment.FrostWalkerEnchantment;
 import net.minecraft.world.level.Level;
 
 /**
@@ -53,8 +66,8 @@ public class FrostSkeleton extends BowSkeleton {
      * Frost arrows: tag the fired arrow with Slowness so ranged hits chill the target.
      */
     @Override
-    protected AbstractArrow getArrow(ItemStack itemStack, float power) {
-        AbstractArrow arrow = super.getArrow(itemStack, power);
+    protected AbstractArrow getArrow(ItemStack itemStack, float power, @Nullable ItemStack weapon) {
+        AbstractArrow arrow = super.getArrow(itemStack, power, weapon);
         if (arrow instanceof Arrow tippable) {
             tippable.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 140, 1));
         }
@@ -91,7 +104,36 @@ public class FrostSkeleton extends BowSkeleton {
     public void tick() {
         super.tick();
         if (!this.level().isClientSide && this.isAlive()) {
-            FrostWalkerEnchantment.onEntityMoved(this, this.level(), this.blockPosition(), 1);
+            freezeWaterAround(this, this.level(), this.blockPosition(), 1);
+        }
+    }
+
+    /**
+     * Frost Walker I as a mob ability. 1.20.1 called {@code FrostWalkerEnchantment.onEntityMoved}; in 1.21
+     * Frost Walker is a data-driven enchantment effect with no static entry point, so this is that
+     * method's body: freeze still water one block down within {@code 2 + level} blocks while on the ground.
+     */
+    private static void freezeWaterAround(LivingEntity entity, Level level, BlockPos pos, int enchantLevel) {
+        if (!entity.onGround()) {
+            return;
+        }
+        BlockState frostedIce = Blocks.FROSTED_ICE.defaultBlockState();
+        int radius = Math.min(16, 2 + enchantLevel);
+        BlockPos.MutableBlockPos above = new BlockPos.MutableBlockPos();
+        for (BlockPos target : BlockPos.betweenClosed(pos.offset(-radius, -1, -radius), pos.offset(radius, -1, radius))) {
+            if (!target.closerToCenterThan(entity.position(), radius)) {
+                continue;
+            }
+            above.set(target.getX(), target.getY() + 1, target.getZ());
+            if (!level.getBlockState(above).isAir()) {
+                continue;
+            }
+            if (level.getBlockState(target) == FrostedIceBlock.meltsInto()
+                    && frostedIce.canSurvive(level, target)
+                    && level.isUnobstructed(frostedIce, target, CollisionContext.empty())) {
+                level.setBlockAndUpdate(target, frostedIce);
+                level.scheduleTick(target, Blocks.FROSTED_ICE, Mth.nextInt(entity.getRandom(), 60, 120));
+            }
         }
     }
 }

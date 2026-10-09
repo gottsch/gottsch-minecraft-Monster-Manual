@@ -20,9 +20,9 @@ import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.entity.animal.WaterAnimal;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.pathfinder.BlockPathTypes;
+import net.minecraft.world.level.pathfinder.PathType;
 
-import static net.neoforged.neoforge.common.ForgeMod.SWIM_SPEED;
+import static net.neoforged.neoforge.common.NeoForgeMod.SWIM_SPEED;
 
 /**
  * @author by Mark Gottschling on 10/31/2025
@@ -36,17 +36,17 @@ public class AlligatorGar extends WaterAnimal {
         super(entityType, level);
 
         // update the pathfinding so that the fish doesn't attempt to walk on land
-        this.setPathfindingMalus(BlockPathTypes.WALKABLE, -1.0F);
-        this.setPathfindingMalus(BlockPathTypes.OPEN, -1.0F);
-        this.setPathfindingMalus(BlockPathTypes.LAVA, -1.0F);
-        this.setPathfindingMalus(BlockPathTypes.DAMAGE_FIRE, -1.0F);
+        this.setPathfindingMalus(PathType.WALKABLE, -1.0F);
+        this.setPathfindingMalus(PathType.OPEN, -1.0F);
+        this.setPathfindingMalus(PathType.LAVA, -1.0F);
+        this.setPathfindingMalus(PathType.DAMAGE_FIRE, -1.0F);
         // optional: ensure water is favorable
-        this.setPathfindingMalus(BlockPathTypes.WATER_BORDER, 10.0F);
-        this.setPathfindingMalus(BlockPathTypes.WATER, 0.0F);
+        this.setPathfindingMalus(PathType.WATER_BORDER, 10.0F);
+        this.setPathfindingMalus(PathType.WATER, 0.0F);
     }
 
     @Override
-    public EntityDimensions getDimensions(Pose pose) {
+    protected EntityDimensions getDefaultDimensions(Pose pose) {
         if (pose == Pose.SWIMMING) {
             // when swimming, we swap the width and height to represent
             // a long, horizontal object rather than a short, wide one.
@@ -55,7 +55,8 @@ public class AlligatorGar extends WaterAnimal {
         }
 
         // Use the default dimensions for all other poses (like STANDING, when on land).
-        return super.getDimensions(pose).scale(this.getScale());
+        // getDimensions applies getScale() on top of this, so no scaling here (1.20.1 scaled it itself)
+        return super.getDefaultDimensions(pose);
     }
 
     @Override
@@ -65,10 +66,10 @@ public class AlligatorGar extends WaterAnimal {
     }
 
     @Override
-    public float getPathfindingMalus(BlockPathTypes pathType) {
+    public float getPathfindingMalus(PathType pathType) {
         // if the fish is on land, temporarily ignore the penalty for walking.
         // this allows the navigation system to pathfind across land to water.
-        if (!this.isInWater() && pathType == BlockPathTypes.WALKABLE) {
+        if (!this.isInWater() && pathType == PathType.WALKABLE) {
             return 0.0F; // no penalty for walking to let it escape
         }
 
@@ -83,7 +84,7 @@ public class AlligatorGar extends WaterAnimal {
                 // we added a custom navigator that is based on GroundPathNavigation,
                 // so the mob uses MOVEMENT_SPEED instead of SWIM_SPEED
                 .add(Attributes.MOVEMENT_SPEED,1D)
-                .add(SWIM_SPEED.get(), 2.0D);
+                .add(SWIM_SPEED, 2.0D);
     }
 
     @Override

@@ -233,7 +233,7 @@ public class SewerGhoulModel<T extends Entity> extends HumanlikeModel<T> {
 	}
 
 	@Override
-	public void renderToBuffer(PoseStack poseStack, VertexConsumer vertexConsumer, int packedLight, int packedOverlay, float red, float green, float blue, float alpha) {
-		ghoul.render(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
+	public void renderToBuffer(PoseStack poseStack, VertexConsumer vertexConsumer, int packedLight, int packedOverlay, int color) {
+		ghoul.render(poseStack, vertexConsumer, packedLight, packedOverlay, color);
 	}
 }

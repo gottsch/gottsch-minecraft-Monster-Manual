@@ -1,5 +1,7 @@
 package mod.gottsch.neo.gmm.core.client.renderer.entity.layer;
 
+
+import net.minecraft.util.FastColor;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import mod.gottsch.neo.gmm.core.GMM;
@@ -36,7 +38,7 @@ public class DeathTyrantEyeLayer<T extends Entity, M extends DeathTyrantModel<T>
 
 	public void render(PoseStack p_116983_, MultiBufferSource p_116984_, int p_116985_, T p_116986_, float p_116987_, float p_116988_, float p_116989_, float p_116990_, float p_116991_, float p_116992_) {
 		VertexConsumer vertexconsumer = p_116984_.getBuffer(this.renderType());
-		this.getParentModel().renderToBuffer(p_116983_, vertexconsumer, 7000000, OverlayTexture.NO_OVERLAY, 0.25F, 0.25F, 0.25F, 1F);
+		this.getParentModel().renderToBuffer(p_116983_, vertexconsumer, 7000000, OverlayTexture.NO_OVERLAY,FastColor.ARGB32.colorFromFloat(1F, 0.25F, 0.25F, 0.25F));
 	}
 
 }

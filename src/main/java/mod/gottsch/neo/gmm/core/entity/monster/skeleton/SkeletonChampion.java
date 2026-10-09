@@ -1,5 +1,9 @@
 package mod.gottsch.neo.gmm.core.entity.monster.skeleton;
 
+
+
+import net.minecraft.core.Holder;
+import net.minecraft.core.registries.BuiltInRegistries;
 import mod.gottsch.neo.gmm.core.config.MobConfig;
 import mod.gottsch.neo.gmm.core.config.MobConfigHelper;
 import mod.gottsch.neo.gmm.core.entity.ai.goal.AvoidCrowdGoal;
@@ -31,7 +35,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.block.state.BlockState;
-import net.neoforged.neoforge.registries.ForgeRegistries;
 
 import java.util.List;
 import java.util.Optional;
@@ -146,8 +149,8 @@ public class SkeletonChampion extends GMMMonster {
 
     @Override
     public SpawnGroupData finalizeSpawn(ServerLevelAccessor level, DifficultyInstance difficulty,
-                                        MobSpawnType spawnType, SpawnGroupData groupData, CompoundTag tag) {
-        groupData = super.finalizeSpawn(level, difficulty, spawnType, groupData, tag);
+                                        MobSpawnType spawnType, SpawnGroupData groupData) {
+        groupData = super.finalizeSpawn(level, difficulty, spawnType, groupData);
         this.populateDefaultEquipmentSlots(level.getRandom(), difficulty);
         return groupData;
     }
@@ -159,16 +162,14 @@ public class SkeletonChampion extends GMMMonster {
      */
     @Override
     protected void populateDefaultEquipmentSlots(RandomSource randomSource, DifficultyInstance difficulty) {
-        Optional<Item> weapon = ForgeRegistries.ITEMS.tags()
-                .getTag(GMMTags.Items.SKELETON_CHAMPION_WEAPONS).getRandomElement(this.random);
+        Optional<Item> weapon = BuiltInRegistries.ITEM.getRandomElementOf(GMMTags.Items.SKELETON_CHAMPION_WEAPONS, this.random).map(Holder::value);
         if (weapon.isPresent()) {
             // an elite carries a pristine blade (no worn damage, unlike the rank-and-file warrior);
             // a modest drop chance makes felling one a worthwhile prize without flooding the loot pool
             this.handDropChances[EquipmentSlot.MAINHAND.getIndex()] = 0.15F;
             this.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(weapon.get()));
         }
-        Optional<Item> shield = ForgeRegistries.ITEMS.tags()
-                .getTag(GMMTags.Items.SKELETON_CHAMPION_SHIELDS).getRandomElement(this.random);
+        Optional<Item> shield = BuiltInRegistries.ITEM.getRandomElementOf(GMMTags.Items.SKELETON_CHAMPION_SHIELDS, this.random).map(Holder::value);
         if (shield.isPresent()) {
             this.handDropChances[EquipmentSlot.OFFHAND.getIndex()] = 0.15F;
             this.setItemSlot(EquipmentSlot.OFFHAND, new ItemStack(shield.get()));
@@ -213,15 +214,15 @@ public class SkeletonChampion extends GMMMonster {
                 this.getX(), this.getY(1.0D), this.getZ(), 20, 0.4D, 0.6D, 0.4D, 0.15D);
     }
 
+    /** Undead: Healing hurts, Harming heals, immune to Poison/Regeneration. See {@link IGMMMonster#isUndead}. */
     @Override
-    public MobType getMobType() {
-        return MobType.UNDEAD;
+    public boolean isUndead() {
+        return true;
     }
-
     @Override
     public void aiStep() {
         if (this.isSunBurnTick()) {
-            this.setSecondsOnFire(8);
+            this.igniteForSeconds(8);
         }
         super.aiStep();
     }
@@ -246,7 +247,7 @@ public class SkeletonChampion extends GMMMonster {
     // 1.74 (vanilla skeleton's eye height) * 1.2 -- matches the 1.2x hitbox/render scale DD's
     // ModEntities/SkeletonChampionRenderer apply so the champion physically reads as bigger.
     @Override
-    protected float getStandingEyeHeight(Pose pose, EntityDimensions dimensions) {
-        return 2.088F;
+    protected EntityDimensions getDefaultDimensions(Pose pose) {
+        return super.getDefaultDimensions(pose).withEyeHeight(2.088F);
     }
 }

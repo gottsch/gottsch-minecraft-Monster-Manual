@@ -110,8 +110,8 @@ public class TallMeleeAttackGoal extends MeleeAttackGoal {
     }
 
     @Override
-    protected void checkAndPerformAttack(LivingEntity enemy, double distToEnemySqr) {
-        // distToEnemySqr is vanilla's feet-to-feet measure; deliberately ignored -- see the javadoc.
+    protected void checkAndPerformAttack(LivingEntity enemy) {
+        // vanilla's own test (Mob#isWithinMeleeAttackRange) is deliberately not used -- see the javadoc.
         if (!withinBodyReach(this.mob, enemy) || this.cooldown > 0) {
             return;
         }

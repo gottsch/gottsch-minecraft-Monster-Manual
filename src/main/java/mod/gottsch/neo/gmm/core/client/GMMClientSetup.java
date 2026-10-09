@@ -27,7 +27,7 @@ import mod.gottsch.neo.gmm.core.particle.GMMParticles;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.neoforge.client.event.RegisterParticleProvidersEvent;
 import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.common.EventBusSubscriber;
 
 /**
  * Client-only mod-bus setup for gmm's shared assets. Currently just binds the sprite-based

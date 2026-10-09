@@ -119,7 +119,7 @@ public class BoulderModel<T extends Entity> extends HierarchicalModel<T> {
 	}
 
 	@Override
-	public void renderToBuffer(PoseStack poseStack, VertexConsumer buffer, int packedLight, int packedOverlay, float red, float green, float blue, float alpha) {
+	public void renderToBuffer(PoseStack poseStack, VertexConsumer buffer, int packedLight, int packedOverlay, int color) {
 		body.render(poseStack, buffer, packedLight, packedOverlay);
 		frontLeftLeg.render(poseStack, buffer, packedLight, packedOverlay);
 		frontRightLeg.render(poseStack, buffer, packedLight, packedOverlay);

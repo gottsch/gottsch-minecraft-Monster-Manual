@@ -375,8 +375,8 @@ public class MinotaurModel<T extends Mob> extends HumanoidModel<T> {
      * seven vanilla parts hold no cubes, so it would walk them for nothing.
      */
     @Override
-    public void renderToBuffer(PoseStack poseStack, VertexConsumer buffer, int packedLight, int packedOverlay, float red, float green, float blue, float alpha) {
-        this.minotaur.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+    public void renderToBuffer(PoseStack poseStack, VertexConsumer buffer, int packedLight, int packedOverlay, int color) {
+        this.minotaur.render(poseStack, buffer, packedLight, packedOverlay, color);
     }
 
     /** The bull head, not the empty vanilla stub -- so {@code CustomHeadLayer} has something real. */

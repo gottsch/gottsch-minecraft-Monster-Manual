@@ -39,17 +39,17 @@ public class BoneShard extends AbstractArrow {
     }
 
     public BoneShard(EntityType<? extends BoneShard> entityType, LivingEntity shooter, Level level) {
-        super(entityType, shooter, level);
+        super(entityType, shooter, level, new ItemStack(Items.BONE), null);
         if (!level.isClientSide) {
             this.setVariant((byte) this.random.nextInt(VARIANTS));
         }
     }
 
     @Override
-    protected void defineSynchedData() {
-        super.defineSynchedData();
-        this.entityData.define(DATA_VARIANT, (byte) 0);
-        this.entityData.define(DATA_SCALE, 1.0F);
+    protected void defineSynchedData(SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(DATA_VARIANT, (byte) 0);
+        builder.define(DATA_SCALE, 1.0F);
     }
 
     public void setVariant(byte variant) {
@@ -87,7 +87,7 @@ public class BoneShard extends AbstractArrow {
     }
 
     @Override
-    protected ItemStack getPickupItem() {
+    protected ItemStack getDefaultPickupItem() {
         return new ItemStack(Items.BONE);
     }
 

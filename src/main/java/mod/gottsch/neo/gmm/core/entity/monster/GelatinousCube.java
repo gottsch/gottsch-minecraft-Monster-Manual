@@ -92,17 +92,16 @@ public class GelatinousCube extends GMMMonster {
     }
 
     @Override
-    public void defineSynchedData() {
-        super.defineSynchedData();
-        this.entityData.define(DATA_SIZE_SCALE, 1.0F);
+    public void defineSynchedData(SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(DATA_SIZE_SCALE, 1.0F);
     }
 
     /** Reads the optional {@code size} config multiplier once at spawn, applied on top of the code default. */
     @Override
     public SpawnGroupData finalizeSpawn(ServerLevelAccessor level, DifficultyInstance difficulty,
-                                         MobSpawnType spawnType, @Nullable SpawnGroupData spawnGroupData,
-                                         @Nullable CompoundTag tag) {
-        spawnGroupData = super.finalizeSpawn(level, difficulty, spawnType, spawnGroupData, tag);
+                                         MobSpawnType spawnType, @Nullable SpawnGroupData spawnGroupData) {
+        spawnGroupData = super.finalizeSpawn(level, difficulty, spawnType, spawnGroupData);
         double size = MobConfigHelper.get(this).number("size", 1.0D);
         setSizeScale(size > 0.0D ? (float) size : 1.0F);
         this.refreshDimensions();
@@ -118,8 +117,8 @@ public class GelatinousCube extends GMMMonster {
     }
 
     @Override
-    public EntityDimensions getDimensions(Pose pose) {
-        return super.getDimensions(pose).scale(getSizeScale());
+    protected EntityDimensions getDefaultDimensions(Pose pose) {
+        return super.getDefaultDimensions(pose).scale(getSizeScale());
     }
 
     @Override
@@ -244,7 +243,7 @@ public class GelatinousCube extends GMMMonster {
 
         int holdDuration = (int) MobConfigHelper.get(this).number("holdDuration", DEFAULT_HOLD_DURATION);
         if (holdDuration > 0) {
-            target.addEffect(new MobEffectInstance(GMMMobEffects.PARALYZED.get(), holdDuration, 0, false, true, true), this);
+            target.addEffect(new MobEffectInstance(GMMMobEffects.PARALYZED, holdDuration, 0, false, true, true), this);
         }
 
         int slownessDuration = (int) MobConfigHelper.get(this).number("slownessDuration", DEFAULT_SLOWNESS_DURATION);
@@ -281,6 +280,6 @@ public class GelatinousCube extends GMMMonster {
         }
         EquipmentSlot slot = damageable.get(this.random.nextInt(damageable.size()));
         int corrosion = (int) MobConfigHelper.get(this).number("corrosion", DEFAULT_CORROSION);
-        target.getItemBySlot(slot).hurtAndBreak(corrosion, target, e -> e.broadcastBreakEvent(slot));
+        target.getItemBySlot(slot).hurtAndBreak(corrosion, target, slot);
     }
 }

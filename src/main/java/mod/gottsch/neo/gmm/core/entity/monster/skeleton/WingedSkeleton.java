@@ -1,5 +1,8 @@
 package mod.gottsch.neo.gmm.core.entity.monster.skeleton;
 
+
+
+import net.minecraft.world.item.ProjectileWeaponItem;
 import mod.gottsch.neo.gmm.core.entity.monster.GMMFlyingMonster;
 import mod.gottsch.neo.gottschcore.random.RandomHelper;
 import net.minecraft.core.BlockPos;
@@ -77,9 +80,9 @@ public class WingedSkeleton extends GMMFlyingMonster implements RangedAttackMob 
     }
 
     @Override
-    public SpawnGroupData finalizeSpawn(ServerLevelAccessor level, DifficultyInstance difficulty, MobSpawnType spawnType, SpawnGroupData groupData, CompoundTag tag) {
+    public SpawnGroupData finalizeSpawn(ServerLevelAccessor level, DifficultyInstance difficulty, MobSpawnType spawnType, SpawnGroupData groupData) {
 
-        groupData = super.finalizeSpawn(level, difficulty, spawnType, groupData, tag);
+        groupData = super.finalizeSpawn(level, difficulty, spawnType, groupData);
 
         RandomSource randomSource = level.getRandom();
         this.populateDefaultEquipmentSlots(randomSource, difficulty);
@@ -99,10 +102,11 @@ public class WingedSkeleton extends GMMFlyingMonster implements RangedAttackMob 
 
     @Override
     public void performRangedAttack(LivingEntity p_32141_, float p_32142_) {
-        ItemStack itemstack = this.getProjectile(this.getItemInHand(ProjectileUtil.getWeaponHoldingHand(this, item -> item instanceof net.minecraft.world.item.BowItem)));
-        AbstractArrow abstractarrow = this.getArrow(itemstack, p_32142_);
-        if (this.getMainHandItem().getItem() instanceof net.minecraft.world.item.BowItem)
-            abstractarrow = ((net.minecraft.world.item.BowItem)this.getMainHandItem().getItem()).customArrow(abstractarrow);
+        ItemStack weapon = this.getItemInHand(ProjectileUtil.getWeaponHoldingHand(this, item -> item instanceof net.minecraft.world.item.BowItem));
+        ItemStack itemstack = this.getProjectile(weapon);
+        AbstractArrow abstractarrow = this.getArrow(itemstack, p_32142_, weapon);
+        if (weapon.getItem() instanceof ProjectileWeaponItem weaponItem)
+            abstractarrow = weaponItem.customArrow(abstractarrow, itemstack, weapon);
         double d0 = p_32141_.getX() - this.getX();
         double d1 = p_32141_.getY(0.3333333333333333D) - abstractarrow.getY();
         double d2 = p_32141_.getZ() - this.getZ();
@@ -112,8 +116,8 @@ public class WingedSkeleton extends GMMFlyingMonster implements RangedAttackMob 
         this.level().addFreshEntity(abstractarrow);
     }
 
-    protected AbstractArrow getArrow(ItemStack p_32156_, float p_32157_) {
-        return ProjectileUtil.getMobArrow(this, p_32156_, p_32157_);
+    protected AbstractArrow getArrow(ItemStack p_32156_, float p_32157_, @Nullable ItemStack weapon) {
+        return ProjectileUtil.getMobArrow(this, p_32156_, p_32157_, weapon);
     }
 
     protected void playStepSound(BlockPos pos, BlockState state) {}
@@ -141,18 +145,17 @@ public class WingedSkeleton extends GMMFlyingMonster implements RangedAttackMob 
         return null;
     }
 
+    /** Undead: Healing hurts, Harming heals, immune to Poison/Regeneration. See {@link IGMMMonster#isUndead}. */
     @Override
-    public @NotNull MobType getMobType() {
-        return MobType.UNDEAD;
+    public boolean isUndead() {
+        return true;
     }
-
-
     @Override
     public void aiStep() {
         boolean flag = this.isSunBurnTick();
         // NOTE winged skeletons can't wear armor so there isn't a check here for helmet
         if (flag) {
-            this.setSecondsOnFire(8);
+            this.igniteForSeconds(8);
         }
         // NOTE need these 2 lines because FlyingMob doesn't call them.
         this.updateSwingTime();
@@ -169,8 +172,9 @@ public class WingedSkeleton extends GMMFlyingMonster implements RangedAttackMob 
 
     }
 
-    protected float getStandingEyeHeight(Pose p_32154_, EntityDimensions p_32155_) {
-        return 1.74F;
+    @Override
+    protected EntityDimensions getDefaultDimensions(Pose pose) {
+        return super.getDefaultDimensions(pose).withEyeHeight(1.74F);
     }
 
     /**
@@ -255,7 +259,7 @@ public class WingedSkeleton extends GMMFlyingMonster implements RangedAttackMob 
             LivingEntity livingEntity = this.mob.getTarget();
             if (livingEntity != null && livingEntity.isAlive()
                     && !mob.getItemBySlot(EquipmentSlot.MAINHAND).is(Items.BOW)) {
-                return mob.distanceToSqr(livingEntity) > mob.getMeleeAttackRangeSqr(mob.getTarget());
+                return !mob.isWithinMeleeAttackRange(livingEntity);
             } else {
                 return false;
             }
@@ -374,7 +378,7 @@ public class WingedSkeleton extends GMMFlyingMonster implements RangedAttackMob 
             // cooldown regardless of criteria
             cooldownCount = Math.min(++this.cooldownCount, cooldownTime);
             if (cooldownCount >= cooldownTime) {
-                if (mob.getMeleeAttackRangeSqr(mob.getTarget()) >= this.mob.distanceToSqr(mob.getTarget())) {
+                if (mob.isWithinMeleeAttackRange(mob.getTarget())) {
                     this.mob.swing(InteractionHand.MAIN_HAND);
                     this.mob.doHurtTarget(mob.getTarget());
                     this.cooldownCount = 0;

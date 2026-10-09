@@ -1,5 +1,9 @@
 package mod.gottsch.neo.gmm.core.entity.monster.construct;
 
+
+
+import net.minecraft.core.Holder;
+import net.minecraft.core.registries.BuiltInRegistries;
 import mod.gottsch.neo.gmm.core.entity.ai.goal.GatedGoal;
 import mod.gottsch.neo.gmm.core.entity.ai.goal.ProximityActivateGoal;
 import mod.gottsch.neo.gmm.core.entity.ai.goal.target.SummonedOwnerTargetGoal;
@@ -19,7 +23,6 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.MobSpawnType;
-import net.minecraft.world.entity.MobType;
 import net.minecraft.world.entity.SpawnGroupData;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -37,7 +40,6 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
-import net.neoforged.neoforge.registries.ForgeRegistries;
 
 import javax.annotation.Nullable;
 import java.util.Optional;
@@ -109,9 +111,9 @@ public class AnimatedArmor extends GMMMonster {
     }
 
     @Override
-    public void defineSynchedData() {
-        super.defineSynchedData();
-        this.entityData.define(DATA_ACTIVE, false);
+    public void defineSynchedData(SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(DATA_ACTIVE, false);
     }
 
     /** Whether this suit has blown its cover -- inert/immobile while false. */
@@ -182,8 +184,7 @@ public class AnimatedArmor extends GMMMonster {
      * body. Helmet/legs/boots have no such requirement and stay simple empty-tag-means-nothing rolls.
      */
     private ItemStack selectRandomEquipment(EquipmentSlot slot) {
-        Optional<Item> equipment = ForgeRegistries.ITEMS.tags()
-                .getTag(tagForSlot(slot)).getRandomElement(this.random);
+        Optional<Item> equipment = BuiltInRegistries.ITEM.getRandomElementOf(tagForSlot(slot), this.random).map(Holder::value);
         if (equipment.isPresent()) {
             return new ItemStack(equipment.get(), 1);
         }
@@ -204,9 +205,8 @@ public class AnimatedArmor extends GMMMonster {
      * be standing still. */
     @Override
     public SpawnGroupData finalizeSpawn(ServerLevelAccessor level, DifficultyInstance difficulty,
-                                         MobSpawnType spawnType, @Nullable SpawnGroupData spawnGroupData,
-                                         @Nullable CompoundTag tag) {
-        spawnGroupData = super.finalizeSpawn(level, difficulty, spawnType, spawnGroupData, tag);
+                                         MobSpawnType spawnType, @Nullable SpawnGroupData spawnGroupData) {
+        spawnGroupData = super.finalizeSpawn(level, difficulty, spawnType, spawnGroupData);
         // no shared base class calls this for us -- vanilla's own leaf mobs (Zombie, AbstractSkeleton,
         // ...) each call it explicitly from their own finalizeSpawn, same idiom SkeletonWarrior/Wight
         // already follow here; without this line populateDefaultEquipmentSlots below is dead code.
@@ -223,15 +223,10 @@ public class AnimatedArmor extends GMMMonster {
         return spawnGroupData;
     }
 
-    @Override
-    public MobType getMobType() {
-        return MobType.UNDEFINED;
-    }
-
     @Nullable
     @Override
     protected SoundEvent getHurtSound(DamageSource damageSource) {
-        return SoundEvents.ARMOR_EQUIP_IRON;
+        return SoundEvents.ARMOR_EQUIP_IRON.value();
     }
 
     @Nullable

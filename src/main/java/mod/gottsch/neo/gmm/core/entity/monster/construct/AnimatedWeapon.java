@@ -1,5 +1,9 @@
 package mod.gottsch.neo.gmm.core.entity.monster.construct;
 
+
+
+import net.minecraft.core.Holder;
+import net.minecraft.core.registries.BuiltInRegistries;
 import mod.gottsch.neo.gmm.core.entity.ai.goal.target.MobHurtByTargetGoal;
 import mod.gottsch.neo.gmm.core.entity.ai.goal.target.SummonedOwnerTargetGoal;
 import mod.gottsch.neo.gmm.core.entity.monster.GMMFlyingMonster;
@@ -23,7 +27,6 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.FlyingMob;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MobSpawnType;
-import net.minecraft.world.entity.MobType;
 import net.minecraft.world.entity.SpawnGroupData;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -39,7 +42,6 @@ import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.neoforge.registries.ForgeRegistries;
 
 import javax.annotation.Nullable;
 import java.util.EnumSet;
@@ -130,9 +132,9 @@ public class AnimatedWeapon extends GMMFlyingMonster {
     }
 
     @Override
-    public void defineSynchedData() {
-        super.defineSynchedData();
-        this.entityData.define(DATA_WINDING_UP, false);
+    public void defineSynchedData(SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(DATA_WINDING_UP, false);
     }
 
     /** Whether the weapon is mid-telegraph, about to strike -- see {@code BiteGoal} and the class doc.
@@ -164,9 +166,8 @@ public class AnimatedWeapon extends GMMFlyingMonster {
      */
     @Override
     public SpawnGroupData finalizeSpawn(ServerLevelAccessor level, DifficultyInstance difficulty,
-                                         MobSpawnType spawnType, @Nullable SpawnGroupData spawnGroupData,
-                                         @Nullable CompoundTag tag) {
-        spawnGroupData = super.finalizeSpawn(level, difficulty, spawnType, spawnGroupData, tag);
+                                         MobSpawnType spawnType, @Nullable SpawnGroupData spawnGroupData) {
+        spawnGroupData = super.finalizeSpawn(level, difficulty, spawnType, spawnGroupData);
         this.populateDefaultEquipmentSlots(level.getRandom(), difficulty);
         return spawnGroupData;
     }
@@ -174,21 +175,15 @@ public class AnimatedWeapon extends GMMFlyingMonster {
     @Override
     protected void populateDefaultEquipmentSlots(RandomSource random, DifficultyInstance difficulty) {
         super.populateDefaultEquipmentSlots(random, difficulty);
-        Optional<Item> weapon = ForgeRegistries.ITEMS.tags()
-                .getTag(GMMTags.Items.ANIMATED_WEAPON_WEAPONS).getRandomElement(random);
+        Optional<Item> weapon = BuiltInRegistries.ITEM.getRandomElementOf(GMMTags.Items.ANIMATED_WEAPON_WEAPONS, random).map(Holder::value);
         weapon.ifPresent(item -> this.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(item, 1)));
         this.setDropChance(EquipmentSlot.MAINHAND, 1.0F); // always drops its own weapon
-    }
-
-    @Override
-    public MobType getMobType() {
-        return MobType.UNDEFINED;
     }
 
     @Nullable
     @Override
     protected SoundEvent getAmbientSound() {
-        return SoundEvents.TRIDENT_RIPTIDE_1;
+        return SoundEvents.TRIDENT_RIPTIDE_1.value();
     }
 
     @Nullable

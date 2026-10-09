@@ -87,21 +87,16 @@ public class OculusOrbParticle extends TextureSheetParticle {
 	/** Additive, full-bright particle pass (same as {@link ElectricSparkParticle}'s). */
 	private static final ParticleRenderType ADDITIVE_GLOW = new ParticleRenderType() {
 		@Override
-		public void begin(BufferBuilder builder, TextureManager textureManager) {
+		public BufferBuilder begin(Tesselator tesselator, TextureManager textureManager) {
 			RenderSystem.depthMask(false);
 			RenderSystem.enableBlend();
 			RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE);
 			RenderSystem.setShader(GameRenderer::getParticleShader);
 			RenderSystem.setShaderTexture(0, TextureAtlas.LOCATION_PARTICLES);
-			builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.PARTICLE);
+			return tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.PARTICLE);
 		}
 
-		@Override
-		public void end(Tesselator tesselator) {
-			tesselator.end();
-			RenderSystem.disableBlend();
-			RenderSystem.depthMask(true);
-		}
+		// 1.21 has no end() hook: ParticleEngine draws the batch, then restores depthMask/blend itself.
 
 		@Override
 		public String toString() {

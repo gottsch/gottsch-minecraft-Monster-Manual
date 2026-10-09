@@ -23,7 +23,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.LeavesBlock;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.pathfinder.BlockPathTypes;
+import net.minecraft.world.level.pathfinder.PathType;
 import net.minecraft.world.level.pathfinder.WalkNodeEvaluator;
 
 import java.util.UUID;
@@ -206,12 +206,12 @@ public class Boulder extends GMMMonster {
 	}
 
 	@Override
-	public void defineSynchedData() {
-		super.defineSynchedData();
-		this.entityData.define(DATA_STATE, DORMANT);
-		this.entityData.define(DATA_LOYAL_TICKS, 0);
-		this.entityData.define(DATA_AMOUNT, 0.0F);
-		this.entityData.define(DATA_BODY_AMOUNT, 0.0F);
+	public void defineSynchedData(SynchedEntityData.Builder builder) {
+		super.defineSynchedData(builder);
+		builder.define(DATA_STATE, DORMANT);
+		builder.define(DATA_LOYAL_TICKS, 0);
+		builder.define(DATA_AMOUNT, 0.0F);
+		builder.define(DATA_BODY_AMOUNT, 0.0F);
 	}
 
 	@Override
@@ -347,15 +347,15 @@ public class Boulder extends GMMMonster {
 		@Override
 		public void start() {
 			this.timeToRecalcPath = 0;
-			this.oldWaterCost = this.boulder.getPathfindingMalus(BlockPathTypes.WATER);
-			this.boulder.setPathfindingMalus(BlockPathTypes.WATER, 0.0F);
+			this.oldWaterCost = this.boulder.getPathfindingMalus(PathType.WATER);
+			this.boulder.setPathfindingMalus(PathType.WATER, 0.0F);
 		}
 
 		@Override
 		public void stop() {
 			this.owner = null;
 			this.navigation.stop();
-			this.boulder.setPathfindingMalus(BlockPathTypes.WATER, this.oldWaterCost);
+			this.boulder.setPathfindingMalus(PathType.WATER, this.oldWaterCost);
 		}
 
 		@Override
@@ -400,8 +400,8 @@ public class Boulder extends GMMMonster {
 		}
 
 		private boolean canTeleportTo(BlockPos pos) {
-			BlockPathTypes blockpathtypes = WalkNodeEvaluator.getBlockPathTypeStatic(this.level, pos.mutable());
-			if (blockpathtypes != BlockPathTypes.WALKABLE) {
+			PathType blockpathtypes = WalkNodeEvaluator.getPathTypeStatic(this.boulder, pos);
+			if (blockpathtypes != PathType.WALKABLE) {
 				return false;
 			} else {
 				BlockState blockstate = this.level.getBlockState(pos.below());

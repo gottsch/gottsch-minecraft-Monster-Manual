@@ -256,8 +256,8 @@ public class GargoyleModel<T extends WingedHumanoid> extends DemonlikeModel<T> {
 	}
 
 	@Override
-	public void renderToBuffer(PoseStack poseStack, VertexConsumer vertexConsumer, int packedLight, int packedOverlay, float red, float green, float blue, float alpha) {
-		gargoyle.render(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
+	public void renderToBuffer(PoseStack poseStack, VertexConsumer vertexConsumer, int packedLight, int packedOverlay, int color) {
+		gargoyle.render(poseStack, vertexConsumer, packedLight, packedOverlay, color);
 	}
 
 	@Override

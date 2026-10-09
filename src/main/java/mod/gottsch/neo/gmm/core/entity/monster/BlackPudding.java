@@ -36,6 +36,7 @@ import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.block.state.BlockState;
 
@@ -134,19 +135,18 @@ public class BlackPudding extends GMMMonster {
     /** Reads the optional {@code maxSplits} config once at (natural/spawner/summon-goal) spawn. */
     @Override
     public SpawnGroupData finalizeSpawn(ServerLevelAccessor level, DifficultyInstance difficulty,
-                                         MobSpawnType spawnType, @Nullable SpawnGroupData spawnGroupData,
-                                         @Nullable CompoundTag tag) {
-        spawnGroupData = super.finalizeSpawn(level, difficulty, spawnType, spawnGroupData, tag);
+                                         MobSpawnType spawnType, @Nullable SpawnGroupData spawnGroupData) {
+        spawnGroupData = super.finalizeSpawn(level, difficulty, spawnType, spawnGroupData);
         this.splitsRemaining = maxSplits();
         return spawnGroupData;
     }
 
     @Override
-    public void defineSynchedData() {
-        super.defineSynchedData();
-        this.entityData.define(DATA_GENERATION, 0);
-        this.entityData.define(DATA_LASH_ID, 0);
-        this.entityData.define(DATA_LASH_DISTANCE, 0.0F);
+    public void defineSynchedData(SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(DATA_GENERATION, 0);
+        builder.define(DATA_LASH_ID, 0);
+        builder.define(DATA_LASH_DISTANCE, 0.0F);
     }
 
     /**
@@ -212,8 +212,8 @@ public class BlackPudding extends GMMMonster {
     }
 
     @Override
-    public EntityDimensions getDimensions(Pose pose) {
-        return super.getDimensions(pose).scale(getSizeScale());
+    protected EntityDimensions getDefaultDimensions(Pose pose) {
+        return super.getDefaultDimensions(pose).scale(getSizeScale());
     }
 
     @Override
@@ -252,19 +252,15 @@ public class BlackPudding extends GMMMonster {
     }
 
     /**
-     * Kept in step with {@link #reachBonus} for the vanilla code paths that <em>do</em> consult it
-     * (targeting checks, other goals). {@link ExtendedReachMeleeAttackGoal} does not use this — see
-     * that class for why a Mob-level override alone is not enough.
+     * Kept in step with {@link #reachBonus} for the vanilla code paths that consult the mob's attack
+     * box (1.20.5+ {@code MeleeAttackGoal}, targeting checks, other goals). See
+     * {@link ExtendedReachMeleeAttackGoal} for how the two avoid adding the bonus twice.
      */
     @Override
-    public double getMeleeAttackRangeSqr(LivingEntity target) {
-        double baseSqr = super.getMeleeAttackRangeSqr(target);
+    protected AABB getAttackBoundingBox() {
         double bonus = reachBonus();
-        if (bonus <= 0.0D) {
-            return baseSqr;
-        }
-        double reach = Math.sqrt(baseSqr) + bonus;
-        return reach * reach;
+        AABB box = super.getAttackBoundingBox();
+        return bonus <= 0.0D ? box : box.inflate(bonus, 0.0D, bonus);
     }
 
     @Override

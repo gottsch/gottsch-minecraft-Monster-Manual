@@ -157,7 +157,7 @@ public class BlackPuddingModel extends EntityModel<BlackPudding> {
 
     /** Emits the lash as procedural geometry in the model's own space. */
     private void renderLash(PoseStack poseStack, VertexConsumer consumer, int packedLight, int packedOverlay,
-                            float red, float green, float blue, float alpha) {
+                            int color) {
         float cosPitch = Mth.cos(lashPitch);
         Vector3f from = new Vector3f(0.0F, LASH_ORIGIN_Y, LASH_ORIGIN_Z);
         Vector3f to = new Vector3f(
@@ -165,17 +165,17 @@ public class BlackPuddingModel extends EntityModel<BlackPudding> {
                 from.y + Mth.sin(lashPitch) * lashLength,
                 from.z - Mth.cos(lashYaw) * cosPitch * lashLength);
 
-        TendrilRenderer.render(poseStack, consumer, packedLight, packedOverlay, red, green, blue, alpha,
+        TendrilRenderer.render(poseStack, consumer, packedLight, packedOverlay, color,
                 from, to, lashArc, LASH_START_RADIUS, LASH_END_RADIUS,
                 LASH_SEGMENTS, LASH_SIDES, LASH_U0, LASH_V0, LASH_U1, LASH_V1);
     }
 
     @Override
     public void renderToBuffer(PoseStack poseStack, VertexConsumer vertexConsumer, int packedLight,
-                               int packedOverlay, float red, float green, float blue, float alpha) {
-        body.render(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
+                               int packedOverlay, int color) {
+        body.render(poseStack, vertexConsumer, packedLight, packedOverlay, color);
         if (lashActive) {
-            renderLash(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
+            renderLash(poseStack, vertexConsumer, packedLight, packedOverlay, color);
         }
     }
 }

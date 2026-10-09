@@ -15,7 +15,7 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.level.NaturalSpawner;
-import net.neoforged.neoforge.event.ForgeEventFactory;
+import net.neoforged.neoforge.event.EventHooks;
 
 /**
  * 
@@ -62,8 +62,7 @@ public abstract class SummonGoal extends Goal {
 
 			boolean isSpawned = false;
 			if (!WorldInfo.isClientSide(level)) {
-				SpawnPlacements.Type placement = SpawnPlacements.getPlacementType(entityType);
-				if (NaturalSpawner.isSpawnPositionOk(placement, level, spawnCoords.toPos(), entityType)) {
+				if (SpawnPlacements.isSpawnPositionOk(entityType, level, spawnCoords.toPos())) {
 					Mob mob = entityType.create(level);
 					mob.setPos((double)spawnX, (double)spawnY, (double)spawnZ);
 					mob.setTarget(target);
@@ -74,9 +73,9 @@ public abstract class SummonGoal extends Goal {
 						Ownership.stampOwnership(mob, owner, OwnershipType.SUMMONED, lifespan);
 					}
 
-					ForgeEventFactory.onFinalizeSpawn(mob, level, level.getCurrentDifficultyAt(spawnCoords.toPos()), MobSpawnType.MOB_SUMMONED, (SpawnGroupData)null, (CompoundTag)null);
+					EventHooks.finalizeMobSpawn(mob, level, level.getCurrentDifficultyAt(spawnCoords.toPos()), MobSpawnType.MOB_SUMMONED, null);
 					level.addFreshEntityWithPassengers(mob);
-					if (mob.isAddedToWorld()) {
+					if (mob.isAddedToLevel()) {
 						isSpawned = true;
 					}
 				}

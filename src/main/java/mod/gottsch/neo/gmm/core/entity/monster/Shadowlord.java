@@ -28,7 +28,6 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.MobSpawnType;
-import net.minecraft.world.entity.MobType;
 import net.minecraft.world.entity.SpawnGroupData;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -137,16 +136,16 @@ public class Shadowlord extends GMMMonster {
 		return !MobConfigHelper.get(this).flag("despawn", true);
 	}
 
+	/** Undead: Healing hurts, Harming heals, immune to Poison/Regeneration. See {@link IGMMMonster#isUndead}. */
 	@Override
-	public MobType getMobType() {
-		return MobType.UNDEAD;
+	public boolean isUndead() {
+	    return true;
 	}
-
 	@Override
 	public SpawnGroupData finalizeSpawn(ServerLevelAccessor level, DifficultyInstance difficulty,
-			MobSpawnType spawnType, SpawnGroupData groupData, CompoundTag tag) {
+			MobSpawnType spawnType, SpawnGroupData groupData) {
 
-		groupData = super.finalizeSpawn(level, difficulty, spawnType, groupData, tag);
+		groupData = super.finalizeSpawn(level, difficulty, spawnType, groupData);
 
 		RandomSource randomSource = level.getRandom();
 		this.populateDefaultEquipmentSlots(randomSource, difficulty);
@@ -223,7 +222,7 @@ public class Shadowlord extends GMMMonster {
 
 		// set on fire if in sun
 		if (this.isSunBurnTick()) {
-			this.setSecondsOnFire(SUN_BURN_SECONDS);
+			this.igniteForSeconds(SUN_BURN_SECONDS);
 		}
 		super.aiStep();
 	}

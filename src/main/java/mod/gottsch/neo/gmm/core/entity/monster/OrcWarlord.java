@@ -1,5 +1,9 @@
 package mod.gottsch.neo.gmm.core.entity.monster;
 
+
+
+import net.minecraft.core.Holder;
+import net.minecraft.core.registries.BuiltInRegistries;
 import mod.gottsch.neo.gmm.core.config.MobConfig;
 import mod.gottsch.neo.gmm.core.config.MobConfigHelper;
 import mod.gottsch.neo.gmm.core.entity.ai.goal.AvoidCrowdGoal;
@@ -32,7 +36,6 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.DifficultyInstance;
-import net.neoforged.neoforge.registries.ForgeRegistries;
 
 import java.util.List;
 import java.util.Optional;
@@ -203,9 +206,8 @@ public class OrcWarlord extends Orc {
      */
     @Override
     public SpawnGroupData finalizeSpawn(ServerLevelAccessor level, DifficultyInstance difficulty,
-                                        MobSpawnType spawnType, SpawnGroupData groupData,
-                                        CompoundTag tag) {
-        SpawnGroupData data = super.finalizeSpawn(level, difficulty, spawnType, groupData, tag);
+                                        MobSpawnType spawnType, SpawnGroupData groupData) {
+        SpawnGroupData data = super.finalizeSpawn(level, difficulty, spawnType, groupData);
         setData(ALL_APPAREL);
         return data;
     }
@@ -219,8 +221,7 @@ public class OrcWarlord extends Orc {
      */
     @Override
     protected void populateDefaultEquipmentSlots(RandomSource randomSource, DifficultyInstance difficulty) {
-        Optional<Item> weapon = ForgeRegistries.ITEMS.tags()
-                .getTag(GMMTags.Items.ORC_WARLORD_WEAPONS).getRandomElement(this.random);
+        Optional<Item> weapon = BuiltInRegistries.ITEM.getRandomElementOf(GMMTags.Items.ORC_WARLORD_WEAPONS, this.random).map(Holder::value);
         if (weapon.isPresent()) {
             this.handDropChances[EquipmentSlot.MAINHAND.getIndex()] = 0.15F;
             this.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(weapon.get()));
@@ -303,7 +304,8 @@ public class OrcWarlord extends Orc {
 
     /** 1.2x the orc's own, matching the render scale a consumer gives the warlord. */
     @Override
-    protected float getStandingEyeHeight(Pose pose, EntityDimensions dimensions) {
-        return super.getStandingEyeHeight(pose, dimensions) * 1.2F;
+    protected EntityDimensions getDefaultDimensions(Pose pose) {
+        EntityDimensions dimensions = super.getDefaultDimensions(pose);
+        return dimensions.withEyeHeight(dimensions.eyeHeight() * 1.2F);
     }
 }

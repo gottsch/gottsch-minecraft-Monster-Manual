@@ -104,9 +104,9 @@ public class GraveZombie extends GMMMonster {
     }
 
     @Override
-    public void defineSynchedData() {
-        super.defineSynchedData();
-        this.entityData.define(DATA_PHASE, PHASE_BURROWED);
+    public void defineSynchedData(SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(DATA_PHASE, PHASE_BURROWED);
     }
 
     @Override
@@ -172,9 +172,8 @@ public class GraveZombie extends GMMMonster {
     /** Spawns already burrowed (invisible, AI off) unless the ambush gimmick is disabled. */
     @Override
     public SpawnGroupData finalizeSpawn(ServerLevelAccessor level, DifficultyInstance difficulty,
-                                         MobSpawnType spawnType, @Nullable SpawnGroupData spawnGroupData,
-                                         @Nullable CompoundTag tag) {
-        spawnGroupData = super.finalizeSpawn(level, difficulty, spawnType, spawnGroupData, tag);
+                                         MobSpawnType spawnType, @Nullable SpawnGroupData spawnGroupData) {
+        spawnGroupData = super.finalizeSpawn(level, difficulty, spawnType, spawnGroupData);
         if (ambushEnabled()) {
             this.setNoAi(true);
             this.setInvisible(true);
@@ -438,16 +437,16 @@ public class GraveZombie extends GMMMonster {
 
     // --- flavour / sounds -----------------------------------------------------------------------
 
+    /** Undead: Healing hurts, Harming heals, immune to Poison/Regeneration. See {@link IGMMMonster#isUndead}. */
     @Override
-    public MobType getMobType() {
-        return MobType.UNDEAD;
+    public boolean isUndead() {
+        return true;
     }
-
     @Override
     public void aiStep() {
         // a buried corpse doesn't catch sun; only burns while up and visible.
         if (getPhase() == PHASE_ACTIVE && this.isSunBurnTick()) {
-            this.setSecondsOnFire(8);
+            this.igniteForSeconds(8);
         }
         // a steady trickle of kicked-up dirt for the whole digging-up / digging-down animation.
         if (this.level().isClientSide) {

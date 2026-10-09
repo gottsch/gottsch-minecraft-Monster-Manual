@@ -24,7 +24,7 @@ import mod.gottsch.neo.gmm.core.particle.GMMParticles;
 import mod.gottsch.neo.gmm.core.sound.GMMSounds;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
-import net.neoforged.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.neoforged.fml.ModContainer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -51,10 +51,9 @@ public class GMM {
 
     public static final String MOD_ID = "gmm";
 
-    public GMM() {
+    public GMM(IEventBus modEventBus, ModContainer container) {
         // by design gmm registers no game content; only its datapack registry (see class javadoc)
         // and default SoundEvents (registry infrastructure, not content -- same category exception).
-        IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
         modEventBus.register(GMMRegistries.class);
         GMMSounds.register(modEventBus);
         GMMParticles.register(modEventBus);

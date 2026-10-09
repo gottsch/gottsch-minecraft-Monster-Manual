@@ -1,5 +1,9 @@
 package mod.gottsch.neo.gmm.core.entity.ai.goal;
 
+
+
+import net.minecraft.core.Holder;
+import net.minecraft.core.registries.BuiltInRegistries;
 import mod.gottsch.neo.gmm.core.entity.monster.ICastingMob;
 import mod.gottsch.neo.gmm.core.entity.monster.IGMMMonster;
 import mod.gottsch.neo.gmm.core.entity.ownership.Ownership;
@@ -12,8 +16,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.ai.goal.Goal;
-import net.neoforged.neoforge.event.ForgeEventFactory;
-import net.neoforged.neoforge.registries.ForgeRegistries;
+import net.neoforged.neoforge.event.EventHooks;
 
 /**
  * The Summon-a-thrall ability: a charge-up-then-execute effect (like {@link EnthrallGoal}'s shape,
@@ -121,8 +124,7 @@ public class SummonThrallGoal extends Goal {
         if (!(mob.level() instanceof ServerLevel serverLevel)) {
             return;
         }
-        EntityType<?> type = ForgeRegistries.ENTITY_TYPES.tags().getTag(poolTag)
-                .getRandomElement(mob.getRandom()).orElse(EntityType.ZOMBIE);
+        EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.getRandomElementOf(poolTag, mob.getRandom()).map(Holder::value).orElse(EntityType.ZOMBIE);
         Entity spawned = type.create(serverLevel);
         if (!(spawned instanceof Mob raised)) {
             return;
@@ -131,7 +133,7 @@ public class SummonThrallGoal extends Goal {
         double x = mob.getX() + Math.cos(angle) * spawnRadius;
         double z = mob.getZ() + Math.sin(angle) * spawnRadius;
         raised.moveTo(x, mob.getY(), z, mob.getYRot(), 0.0F);
-        ForgeEventFactory.onFinalizeSpawn(raised, serverLevel, serverLevel.getCurrentDifficultyAt(raised.blockPosition()), MobSpawnType.MOB_SUMMONED, null, null);
+        EventHooks.finalizeMobSpawn(raised, serverLevel, serverLevel.getCurrentDifficultyAt(raised.blockPosition()), MobSpawnType.MOB_SUMMONED, null);
         serverLevel.addFreshEntityWithPassengers(raised);
         if (mob.getTarget() != null) {
             raised.setTarget(mob.getTarget());

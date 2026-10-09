@@ -7,12 +7,10 @@ import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.Item;
-import net.neoforged.fml.common.Mod;
 
 /**
  * @author by Mark Gottschling on 11/6/2025
  */
-@EventBusSubscriber(modid = GMM.MOD_ID, bus = EventBusSubscriber.Bus.GAME)
 public class GMMTags {
     public static class Items {
 

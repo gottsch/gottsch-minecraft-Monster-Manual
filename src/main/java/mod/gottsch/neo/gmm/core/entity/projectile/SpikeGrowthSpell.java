@@ -17,6 +17,12 @@
  */
 package mod.gottsch.neo.gmm.core.entity.projectile;
 
+
+
+
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.damagesource.DamageSource;
 import mod.gottsch.neo.gmm.core.config.MobConfig;
 import mod.gottsch.neo.gmm.core.config.MobConfigHelper;
 import mod.gottsch.neo.gmm.core.damagesource.GMMDamageTypes;
@@ -197,18 +203,19 @@ public class SpikeGrowthSpell extends GMMHurtingProjectile {
 		List<LivingEntity> targets = this.level().getEntitiesOfClass(LivingEntity.class, aabb, e -> e != this.getOwner());
 		Entity ownerEntity = this.getOwner();
 		for (LivingEntity target : targets) {
-			target.hurt(GMMDamageTypes.source(level(), GMMDamageTypes.SPIKE_GROWTH_SPELL, this, ownerEntity), damage);
+			DamageSource damageSource = GMMDamageTypes.source(level(), GMMDamageTypes.SPIKE_GROWTH_SPELL, this, ownerEntity);
+			target.hurt(damageSource, damage);
 			target.push(0.0D, knockupVelocity, 0.0D);
 			if (ownerEntity instanceof LivingEntity) {
-				this.doEnchantDamageEffects((LivingEntity) ownerEntity, target);
+				EnchantmentHelper.doPostAttackEffects((ServerLevel) this.level(), target, damageSource);
 			}
 		}
 	}
 
 	@Override
-	protected void defineSynchedData() {
-		this.entityData.define(ORIGIN_X, 0F);
-		this.entityData.define(ORIGIN_Y, 0F);
-		this.entityData.define(ORIGIN_Z, 0F);
+	protected void defineSynchedData(SynchedEntityData.Builder builder) {
+		builder.define(ORIGIN_X, 0F);
+		builder.define(ORIGIN_Y, 0F);
+		builder.define(ORIGIN_Z, 0F);
 	}
 }

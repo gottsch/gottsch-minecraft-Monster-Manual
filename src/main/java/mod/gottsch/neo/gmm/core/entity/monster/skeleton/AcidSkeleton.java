@@ -104,18 +104,18 @@ public class AcidSkeleton extends GMMMonster {
             return;
         }
         EquipmentSlot slot = damageable.get(this.random.nextInt(damageable.size()));
-        target.getItemBySlot(slot).hurtAndBreak(corrosionAmount(), target, e -> e.broadcastBreakEvent(slot));
+        target.getItemBySlot(slot).hurtAndBreak(corrosionAmount(), target, slot);
     }
 
+    /** Undead: Healing hurts, Harming heals, immune to Poison/Regeneration. See {@link IGMMMonster#isUndead}. */
     @Override
-    public MobType getMobType() {
-        return MobType.UNDEAD;
+    public boolean isUndead() {
+        return true;
     }
-
     @Override
     public void aiStep() {
         if (this.isSunBurnTick()) {
-            this.setSecondsOnFire(8);
+            this.igniteForSeconds(8);
         }
         // drip caustic acid: an occasional droplet that forms on a bone, then falls and splats
         if (this.level().isClientSide && this.random.nextInt(12) == 0) {
@@ -146,7 +146,7 @@ public class AcidSkeleton extends GMMMonster {
     }
 
     @Override
-    protected float getStandingEyeHeight(Pose pose, EntityDimensions dimensions) {
-        return 1.74F;
+    protected EntityDimensions getDefaultDimensions(Pose pose) {
+        return super.getDefaultDimensions(pose).withEyeHeight(1.74F);
     }
 }

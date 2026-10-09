@@ -60,7 +60,7 @@ public final class TendrilRenderer {
      * @param u0 v0 u1 v1  normalised UV rect to map the tube into, u wrapping around, v along the length
      */
     public static void render(PoseStack poseStack, VertexConsumer consumer, int packedLight, int packedOverlay,
-                              float red, float green, float blue, float alpha,
+                              int color,
                               Vector3f from, Vector3f to, float sag,
                               float startRadius, float endRadius,
                               int segments, int sides,
@@ -69,7 +69,7 @@ public final class TendrilRenderer {
         sides = Math.max(3, sides);
 
         Matrix4f pose = poseStack.last().pose();
-        Matrix3f normal = poseStack.last().normal();
+        PoseStack.Pose normal = poseStack.last();
 
         // quadratic bezier control point: the midpoint pushed out along the tube's own perpendicular,
         // so the bow follows the limb's orientation rather than always bending in world-space Y
@@ -98,10 +98,10 @@ public final class TendrilRenderer {
 
                 // entityCutoutNoCull, so winding does not affect visibility — but the normals still
                 // drive shading, and must match the ring's outward radial direction
-                vertex(consumer, pose, normal, ring, a, ua, va, packedLight, packedOverlay, red, green, blue, alpha);
-                vertex(consumer, pose, normal, next, a, ua, vb, packedLight, packedOverlay, red, green, blue, alpha);
-                vertex(consumer, pose, normal, next, b, ub, vb, packedLight, packedOverlay, red, green, blue, alpha);
-                vertex(consumer, pose, normal, ring, b, ub, va, packedLight, packedOverlay, red, green, blue, alpha);
+                vertex(consumer, pose, normal, ring, a, ua, va, packedLight, packedOverlay, color);
+                vertex(consumer, pose, normal, next, a, ua, vb, packedLight, packedOverlay, color);
+                vertex(consumer, pose, normal, next, b, ub, vb, packedLight, packedOverlay, color);
+                vertex(consumer, pose, normal, ring, b, ub, va, packedLight, packedOverlay, color);
             }
             System.arraycopy(next, 0, ring, 0, ring.length);
         }
@@ -137,22 +137,21 @@ public final class TendrilRenderer {
         }
     }
 
-    private static void vertex(VertexConsumer consumer, Matrix4f pose, Matrix3f normal, float[] ring, int o,
+    private static void vertex(VertexConsumer consumer, Matrix4f pose, PoseStack.Pose normal, float[] ring, int o,
                                float u, float v, int packedLight, int packedOverlay,
-                               float red, float green, float blue, float alpha) {
+                               int color) {
         // Positions are model units and the matrix is block space, so divide — exactly as
         // ModelPart.Cube.compile does. Normals are directions rather than positions, so they are
         // deliberately left unscaled.
-        consumer.vertex(pose,
+        consumer.addVertex(pose,
                         ring[o] / UNITS_PER_BLOCK,
                         ring[o + 1] / UNITS_PER_BLOCK,
                         ring[o + 2] / UNITS_PER_BLOCK)
-                .color(red, green, blue, alpha)
-                .uv(u, v)
-                .overlayCoords(packedOverlay)
-                .uv2(packedLight)
-                .normal(normal, ring[o + 3], ring[o + 4], ring[o + 5])
-                .endVertex();
+                .setColor(color)
+                .setUv(u, v)
+                .setOverlay(packedOverlay)
+                .setLight(packedLight)
+                .setNormal(normal, ring[o + 3], ring[o + 4], ring[o + 5]);
     }
 
     private static Vector3f bezier(Vector3f a, Vector3f c, Vector3f b, float t) {

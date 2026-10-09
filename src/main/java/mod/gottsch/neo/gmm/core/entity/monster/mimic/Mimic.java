@@ -1,5 +1,11 @@
 package mod.gottsch.neo.gmm.core.entity.monster.mimic;
 
+
+
+
+import net.minecraft.world.level.storage.loot.LootTable;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceKey;
 import mod.gottsch.neo.gmm.core.entity.ai.goal.GatedGoal;
 import mod.gottsch.neo.gmm.core.entity.ai.goal.target.SummonedOwnerTargetGoal;
 import mod.gottsch.neo.gmm.core.entity.monster.GMMMonster;
@@ -15,7 +21,6 @@ import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobSpawnType;
-import net.minecraft.world.entity.MobType;
 import net.minecraft.world.entity.SpawnGroupData;
 import net.minecraft.world.entity.ai.goal.FloatGoal;
 import net.minecraft.world.entity.ai.goal.Goal;
@@ -95,7 +100,7 @@ public abstract class Mimic extends GMMMonster {
     private static final String TAG_LOOT_TABLE = "MimicLootTable";
 
     /** Server-only, per-instance loot table override — see this class's doc for why. Null = use the
-     * entity type's normal registered table ({@code data/<namespace>/loot_tables/entities/<id>.json}). */
+     * entity type's normal registered table ({@code data/<namespace>/loot_table/entities/<id>.json}). */
     @Nullable
     private ResourceLocation lootTable;
 
@@ -119,8 +124,8 @@ public abstract class Mimic extends GMMMonster {
     }
 
     @Override
-    protected ResourceLocation getDefaultLootTable() {
-        return this.lootTable != null ? this.lootTable : super.getDefaultLootTable();
+    protected ResourceKey<LootTable> getDefaultLootTable() {
+        return this.lootTable != null ? ResourceKey.create(Registries.LOOT_TABLE, this.lootTable) : super.getDefaultLootTable();
     }
 
     @Override
@@ -149,9 +154,8 @@ public abstract class Mimic extends GMMMonster {
      */
     @Override
     public SpawnGroupData finalizeSpawn(ServerLevelAccessor level, DifficultyInstance difficulty,
-                                         MobSpawnType spawnType, @Nullable SpawnGroupData spawnGroupData,
-                                         @Nullable CompoundTag tag) {
-        spawnGroupData = super.finalizeSpawn(level, difficulty, spawnType, spawnGroupData, tag);
+                                         MobSpawnType spawnType, @Nullable SpawnGroupData spawnGroupData) {
+        spawnGroupData = super.finalizeSpawn(level, difficulty, spawnType, spawnGroupData);
         snapToBlockPose();
         return spawnGroupData;
     }
@@ -170,11 +174,11 @@ public abstract class Mimic extends GMMMonster {
     }
 
     @Override
-    public void defineSynchedData() {
-        super.defineSynchedData();
-        this.entityData.define(DATA_ACTIVE, false);
-        this.entityData.define(DATA_HAS_TARGET, false);
-        this.entityData.define(DATA_OPEN_PROGRESS, 0.0F);
+    public void defineSynchedData(SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(DATA_ACTIVE, false);
+        builder.define(DATA_HAS_TARGET, false);
+        builder.define(DATA_OPEN_PROGRESS, 0.0F);
     }
 
     /** Persists the loot table override (unrelated to vanilla's own "DeathLootTable" tag, which this
@@ -263,11 +267,6 @@ public abstract class Mimic extends GMMMonster {
 
     public void setHasTarget(boolean hasTarget) {
         this.entityData.set(DATA_HAS_TARGET, hasTarget);
-    }
-
-    @Override
-    public MobType getMobType() {
-        return MobType.UNDEFINED;
     }
 
     @Nullable

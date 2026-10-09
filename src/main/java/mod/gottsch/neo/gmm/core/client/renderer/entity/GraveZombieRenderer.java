@@ -32,8 +32,8 @@ public class GraveZombieRenderer<T extends GraveZombie> extends HumanoidMobRende
 	}
 
 	@Override
-	protected void setupRotations(T entity, PoseStack poseStack, float ageInTicks, float rotYaw, float partialTicks) {
-		super.setupRotations(entity, poseStack, ageInTicks, rotYaw, partialTicks);
+	protected void setupRotations(T entity, PoseStack poseStack, float ageInTicks, float rotYaw, float partialTicks, float scale) {
+		super.setupRotations(entity, poseStack, ageInTicks, rotYaw, partialTicks, scale);
 
 		// hand the rise amount to the model -- it drives the arms-up-to-shamble blend + shudder in
 		// setupAnim (which runs after this).

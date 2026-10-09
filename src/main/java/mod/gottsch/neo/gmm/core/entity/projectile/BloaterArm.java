@@ -27,7 +27,7 @@ public class BloaterArm extends AbstractArrow {
     }
 
     public BloaterArm(EntityType<? extends BloaterArm> entityType, LivingEntity shooter, Level level) {
-        super(entityType, shooter, level);
+        super(entityType, shooter, level, new ItemStack(Items.ROTTEN_FLESH), null);
     }
 
     public int getSpinTicks() {
@@ -49,7 +49,7 @@ public class BloaterArm extends AbstractArrow {
     }
 
     @Override
-    protected ItemStack getPickupItem() {
+    protected ItemStack getDefaultPickupItem() {
         return new ItemStack(Items.ROTTEN_FLESH);
     }
 }

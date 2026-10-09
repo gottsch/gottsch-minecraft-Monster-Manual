@@ -1,5 +1,9 @@
 package mod.gottsch.neo.gmm.core.entity.monster.skeleton;
 
+
+
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import mod.gottsch.neo.gmm.core.config.MobConfigHelper;
 import mod.gottsch.neo.gmm.core.entity.ai.goal.target.SummonedOwnerTargetGoal;
 import mod.gottsch.neo.gmm.core.entity.monster.GMMMonster;
@@ -108,7 +112,7 @@ public class TaintedSkeleton extends GMMMonster {
         int count = shrapnelCount();
         for (int i = 0; i < count; i++) {
             AbstractArrow shard = (shardFactory != null)
-                    ? shardFactory.apply(this, this.level()) : new Arrow(this.level(), this);
+                    ? shardFactory.apply(this, this.level()) : new Arrow(this.level(), this, new ItemStack(Items.ARROW), null);
             // full spherical scatter (slight upward bias so shards fan out rather than straight down)
             double dx = this.random.nextGaussian();
             double dy = this.random.nextGaussian() * 0.6D + 0.25D;
@@ -121,15 +125,15 @@ public class TaintedSkeleton extends GMMMonster {
         }
     }
 
+    /** Undead: Healing hurts, Harming heals, immune to Poison/Regeneration. See {@link IGMMMonster#isUndead}. */
     @Override
-    public MobType getMobType() {
-        return MobType.UNDEAD;
+    public boolean isUndead() {
+        return true;
     }
-
     @Override
     public void aiStep() {
         if (this.isSunBurnTick()) {
-            this.setSecondsOnFire(8);
+            this.igniteForSeconds(8);
         }
         // a faint 'unstable' wisp so it's identifiable while alive
         if (this.level().isClientSide && this.random.nextInt(8) == 0) {
@@ -158,7 +162,7 @@ public class TaintedSkeleton extends GMMMonster {
     }
 
     @Override
-    protected float getStandingEyeHeight(Pose pose, EntityDimensions dimensions) {
-        return 1.74F;
+    protected EntityDimensions getDefaultDimensions(Pose pose) {
+        return super.getDefaultDimensions(pose).withEyeHeight(1.74F);
     }
 }

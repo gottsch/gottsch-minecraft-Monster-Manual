@@ -17,6 +17,8 @@
  */
 package mod.gottsch.neo.gmm.core.entity.projectile;
 
+
+import net.minecraft.server.level.ServerEntity;
 import net.minecraft.Util;
 import net.minecraft.util.Mth;
 import net.minecraft.core.particles.ParticleOptions;
@@ -112,7 +114,7 @@ public class Rock extends GMMHurtingProjectile implements ItemSupplier {
 	}
 
 	@Override
-	public Packet<ClientGamePacketListener> getAddEntityPacket() {
+	public Packet<ClientGamePacketListener> getAddEntityPacket(ServerEntity serverEntity) {
 		Entity owner = this.getOwner();
 		int ownerId = owner == null ? 0 : owner.getId();
 		// send the actual velocity (not the power vector) so the client reproduces the arc
@@ -167,7 +169,7 @@ public class Rock extends GMMHurtingProjectile implements ItemSupplier {
 	}
 
 	public void setItem(ItemStack stack) {
-		if (!stack.is(defaultItem()) || stack.hasTag()) {
+		if (!stack.is(defaultItem()) || !stack.isComponentsPatchEmpty()) {
 			this.getEntityData().set(DATA_ITEM_STACK, Util.make(stack.copy(), (itemStack) -> {
 				itemStack.setCount(1);
 			}));
@@ -175,8 +177,8 @@ public class Rock extends GMMHurtingProjectile implements ItemSupplier {
 	}
 
 	@Override
-	protected void defineSynchedData() {
-		this.getEntityData().define(DATA_ITEM_STACK, ItemStack.EMPTY);
+	protected void defineSynchedData(SynchedEntityData.Builder builder) {
+		builder.define(DATA_ITEM_STACK, ItemStack.EMPTY);
 	}
 
 	@Override
@@ -184,7 +186,7 @@ public class Rock extends GMMHurtingProjectile implements ItemSupplier {
 		super.addAdditionalSaveData(tag);
 		ItemStack itemstack = this.getItemRaw();
 		if (!itemstack.isEmpty()) {
-			tag.put("Item", itemstack.save(new CompoundTag()));
+			tag.put("Item", itemstack.save(this.registryAccess()));
 		}
 
 	}
@@ -192,7 +194,7 @@ public class Rock extends GMMHurtingProjectile implements ItemSupplier {
 	@Override
 	public void readAdditionalSaveData(CompoundTag tag) {
 		super.readAdditionalSaveData(tag);
-		ItemStack itemStack = ItemStack.of(tag.getCompound("Item"));
+		ItemStack itemStack = ItemStack.parseOptional(this.registryAccess(), tag.getCompound("Item"));
 		this.setItem(itemStack);
 	}
 }

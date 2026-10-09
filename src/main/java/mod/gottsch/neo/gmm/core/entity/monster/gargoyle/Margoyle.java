@@ -92,11 +92,7 @@ public class Margoyle extends WingedHumanoid {
     }
 
     @Override
-    public @NotNull MobType getMobType() {
-        return MobType.UNDEFINED;
-    }
-
-    protected float getStandingEyeHeight(Pose pose, EntityDimensions entityDimensions) {
-        return 1.74F;
+    protected EntityDimensions getDefaultDimensions(Pose pose) {
+        return super.getDefaultDimensions(pose).withEyeHeight(1.74F);
     }
 }

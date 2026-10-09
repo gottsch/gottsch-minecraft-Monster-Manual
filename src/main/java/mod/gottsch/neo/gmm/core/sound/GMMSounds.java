@@ -22,8 +22,8 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredRegister;
-import net.neoforged.neoforge.registries.ForgeRegistries;
 import net.neoforged.neoforge.registries.DeferredHolder;
+import net.minecraft.core.registries.Registries;
 
 /**
  * GMM's default {@link SoundEvent}s, shipped with matching {@code .ogg} assets under
@@ -39,27 +39,27 @@ import net.neoforged.neoforge.registries.DeferredHolder;
  * @author Mark Gottschling on 7/2/2026
  */
 public class GMMSounds {
-	public static final DeferredRegister<SoundEvent> SOUNDS = DeferredRegister.create(ForgeRegistries.SOUND_EVENTS, GMM.MOD_ID);
+	public static final DeferredRegister<SoundEvent> SOUNDS = DeferredRegister.create(Registries.SOUND_EVENT, GMM.MOD_ID);
 
-	public static final RegistryObject<SoundEvent> SHADOW_AMBIENT = registerSoundEvent("entity.shadow.ambient");
-	public static final RegistryObject<SoundEvent> DAEMON_AMBIENT = registerSoundEvent("entity.daemon.ambient");
-	public static final RegistryObject<SoundEvent> BEHOLDER_AMBIENT = registerSoundEvent("entity.beholder.ambient");
-	public static final RegistryObject<SoundEvent> DEATH_TYRANT_AMBIENT = registerSoundEvent("entity.death_tyrant.ambient");
-	public static final RegistryObject<SoundEvent> GAZER_AMBIENT = registerSoundEvent("entity.gazer.ambient");
-	public static final RegistryObject<SoundEvent> SPECTATOR_AMBIENT = registerSoundEvent("entity.spectator.ambient");
-	public static final RegistryObject<SoundEvent> SHADOWLORD_AMBIENT = registerSoundEvent("entity.shadowlord.ambient");
-	public static final RegistryObject<SoundEvent> SHADOWLORD_STEP = registerSoundEvent("entity.shadowlord.step");
+	public static final DeferredHolder<SoundEvent, SoundEvent> SHADOW_AMBIENT = registerSoundEvent("entity.shadow.ambient");
+	public static final DeferredHolder<SoundEvent, SoundEvent> DAEMON_AMBIENT = registerSoundEvent("entity.daemon.ambient");
+	public static final DeferredHolder<SoundEvent, SoundEvent> BEHOLDER_AMBIENT = registerSoundEvent("entity.beholder.ambient");
+	public static final DeferredHolder<SoundEvent, SoundEvent> DEATH_TYRANT_AMBIENT = registerSoundEvent("entity.death_tyrant.ambient");
+	public static final DeferredHolder<SoundEvent, SoundEvent> GAZER_AMBIENT = registerSoundEvent("entity.gazer.ambient");
+	public static final DeferredHolder<SoundEvent, SoundEvent> SPECTATOR_AMBIENT = registerSoundEvent("entity.spectator.ambient");
+	public static final DeferredHolder<SoundEvent, SoundEvent> SHADOWLORD_AMBIENT = registerSoundEvent("entity.shadowlord.ambient");
+	public static final DeferredHolder<SoundEvent, SoundEvent> SHADOWLORD_STEP = registerSoundEvent("entity.shadowlord.step");
 	/** shared wing-flap ambient, used by Gargoyle, Margoyle, and WingedSkeleton. */
-	public static final RegistryObject<SoundEvent> WING_FLAP = registerSoundEvent("entity.wing.flap");
+	public static final DeferredHolder<SoundEvent, SoundEvent> WING_FLAP = registerSoundEvent("entity.wing.flap");
 	/** shared ambient, used by the Mimic family (Chest Mimic, Barrel Mimic, ...). */
-	public static final RegistryObject<SoundEvent> MIMIC_AMBIENT = registerSoundEvent("entity.mimic.ambient");
+	public static final DeferredHolder<SoundEvent, SoundEvent> MIMIC_AMBIENT = registerSoundEvent("entity.mimic.ambient");
 
 	/** Called from the GMM constructor to attach the registry to the mod event bus. */
 	public static void register(IEventBus modEventBus) {
 		SOUNDS.register(modEventBus);
 	}
 
-	private static RegistryObject<SoundEvent> registerSoundEvent(String name) {
+	private static DeferredHolder<SoundEvent, SoundEvent> registerSoundEvent(String name) {
 		return SOUNDS.register(name, () -> SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath(GMM.MOD_ID, name)));
 	}
 }

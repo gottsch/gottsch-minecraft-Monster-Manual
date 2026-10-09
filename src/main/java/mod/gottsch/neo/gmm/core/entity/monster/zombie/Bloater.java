@@ -1,5 +1,21 @@
 package mod.gottsch.neo.gmm.core.entity.monster.zombie;
 
+
+
+
+
+
+
+
+
+import java.util.Optional;
+import java.util.ArrayList;
+import java.util.List;
+import net.minecraft.world.item.alchemy.PotionContents;
+import net.minecraft.util.FastColor;
+import net.minecraft.core.particles.ColorParticleOption;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import mod.gottsch.neo.gmm.core.config.MobConfigHelper;
 import mod.gottsch.neo.gmm.core.entity.ai.goal.target.SummonedOwnerTargetGoal;
 import mod.gottsch.neo.gmm.core.entity.monster.GMMMonster;
@@ -79,9 +95,9 @@ public class Bloater extends GMMMonster {
     }
 
     @Override
-    public void defineSynchedData() {
-        super.defineSynchedData();
-        this.entityData.define(DATA_ARMS_DETACHED, false);
+    public void defineSynchedData(SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(DATA_ARMS_DETACHED, false);
     }
 
     /** True once the death-rupture has flung its arms loose; hides the model's arm parts. */
@@ -167,21 +183,24 @@ public class Bloater extends GMMMonster {
 
         AreaEffectCloud cloud = new AreaEffectCloud(this.level(), this.getX(), this.getY(0.25D), this.getZ());
         cloud.setOwner(this);
-        cloud.setParticle(ParticleTypes.ENTITY_EFFECT);
-        cloud.setFixedColor(CLOUD_COLOR);
+        // 1.21: a cloud's colour comes from its PotionContents; the particle must be a
+        // ColorParticleOption for setPotionContents to tint it (replaces 1.20.1's setFixedColor)
+        cloud.setParticle(ColorParticleOption.create(ParticleTypes.ENTITY_EFFECT, FastColor.ARGB32.opaque(CLOUD_COLOR)));
         cloud.setRadius(radius);
         cloud.setDuration(duration);
         // shrink to nothing over its lifetime so it visibly dissipates rather than snapping off
         cloud.setRadiusPerTick(-radius / (float) duration);
         cloud.setWaitTime(10);
 
-        cloud.addEffect(new MobEffectInstance(MobEffects.POISON, this.poisonDuration(), this.poisonAmplifier()));
+        List<MobEffectInstance> effects = new ArrayList<>();
+        effects.add(new MobEffectInstance(MobEffects.POISON, this.poisonDuration(), this.poisonAmplifier()));
         if (this.appliesHunger()) {
-            cloud.addEffect(new MobEffectInstance(MobEffects.HUNGER, this.poisonDuration(), 0));
+            effects.add(new MobEffectInstance(MobEffects.HUNGER, this.poisonDuration(), 0));
         }
         if (this.appliesNausea()) {
-            cloud.addEffect(new MobEffectInstance(MobEffects.CONFUSION, this.poisonDuration(), 0));
+            effects.add(new MobEffectInstance(MobEffects.CONFUSION, this.poisonDuration(), 0));
         }
+        cloud.setPotionContents(new PotionContents(Optional.empty(), Optional.of(CLOUD_COLOR), effects));
         this.level().addFreshEntity(cloud);
 
         if (this.launchesArms()) {
@@ -201,7 +220,7 @@ public class Bloater extends GMMMonster {
             // gmm registers no EntityTypes, so a null factory (DD not wired) falls back to a plain
             // arrow rather than trying to construct an unregistered BloaterArm.
             AbstractArrow arm = (armFactory != null)
-                    ? armFactory.apply(this, this.level()) : new Arrow(this.level(), this);
+                    ? armFactory.apply(this, this.level()) : new Arrow(this.level(), this, new ItemStack(Items.ARROW), null);
             double dx = this.random.nextGaussian() * 0.5D;
             double dy = this.random.nextDouble() * 0.4D + 0.2D; // a soft upward pop
             double dz = this.random.nextGaussian() * 0.5D;
@@ -214,11 +233,11 @@ public class Bloater extends GMMMonster {
         }
     }
 
+    /** Undead: Healing hurts, Harming heals, immune to Poison/Regeneration. See {@link IGMMMonster#isUndead}. */
     @Override
-    public MobType getMobType() {
-        return MobType.UNDEAD;
+    public boolean isUndead() {
+        return true;
     }
-
     @Override
     public boolean canBeAffected(MobEffectInstance effectInstance) {
         // immune to its own miasma (and poison generally, as befits the undead)
@@ -231,7 +250,7 @@ public class Bloater extends GMMMonster {
     @Override
     public void aiStep() {
         if (this.isSunBurnTick()) {
-            this.setSecondsOnFire(8);
+            this.igniteForSeconds(8);
         }
         // a faint miasma seeps off the bloated corpse so it reads as "plague" while still alive
         if (this.level().isClientSide && this.random.nextInt(10) == 0) {
@@ -262,7 +281,7 @@ public class Bloater extends GMMMonster {
     }
 
     @Override
-    protected float getStandingEyeHeight(Pose pose, EntityDimensions dimensions) {
-        return 1.90F;
+    protected EntityDimensions getDefaultDimensions(Pose pose) {
+        return super.getDefaultDimensions(pose).withEyeHeight(1.90F);
     }
 }

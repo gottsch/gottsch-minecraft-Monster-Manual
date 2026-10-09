@@ -99,9 +99,9 @@ public class BloodyBones extends GMMMonster {
     }
 
     @Override
-    public void defineSynchedData() {
-        super.defineSynchedData();
-        this.entityData.define(DATA_PHASE, PHASE_ALIVE);
+    public void defineSynchedData(SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(DATA_PHASE, PHASE_ALIVE);
     }
 
     @Override
@@ -240,7 +240,7 @@ public class BloodyBones extends GMMMonster {
     private void flingLimbs() {
         for (int i = 0; i < LIMB_SHARDS; i++) {
             AbstractArrow shard = (shardFactory != null)
-                    ? shardFactory.apply(this, this.level()) : new Arrow(this.level(), this);
+                    ? shardFactory.apply(this, this.level()) : new Arrow(this.level(), this, new ItemStack(Items.ARROW), null);
             double dx = this.random.nextGaussian() * 0.5D;
             double dy = this.random.nextDouble() * 0.4D + 0.2D; // a soft upward pop
             double dz = this.random.nextGaussian() * 0.5D;
@@ -260,7 +260,7 @@ public class BloodyBones extends GMMMonster {
     private void beginRise() {
         setPhase(PHASE_RISING);
         this.phaseTicks = 0;
-        this.playSound(SoundEvents.SOUL_ESCAPE, 1.0F, 0.6F);
+        this.playSound(SoundEvents.SOUL_ESCAPE.value(), 1.0F, 0.6F);
         spawnBoneBurst(ParticleTypes.CRIT, 10);
     }
 
@@ -356,17 +356,17 @@ public class BloodyBones extends GMMMonster {
 
     // --- flavour / sounds -----------------------------------------------------------------------
 
+    /** Undead: Healing hurts, Harming heals, immune to Poison/Regeneration. See {@link IGMMMonster#isUndead}. */
     @Override
-    public MobType getMobType() {
-        return MobType.UNDEAD;
+    public boolean isUndead() {
+        return true;
     }
-
     @Override
     public void aiStep() {
         // sun-burn only while up and about; a downed pile must be burned deliberately (real fire),
         // otherwise it could never be seen to resurrect in daylight.
         if (getPhase() == PHASE_ALIVE && this.isSunBurnTick()) {
-            this.setSecondsOnFire(8);
+            this.igniteForSeconds(8);
         }
         // weeps blood: an occasional droplet forms on a bone, then falls and splats (reuses the
         // acid-drip behaviour with a red sprite). Only while up and moving.
@@ -398,7 +398,7 @@ public class BloodyBones extends GMMMonster {
     }
 
     @Override
-    protected float getStandingEyeHeight(Pose pose, EntityDimensions dimensions) {
-        return 1.74F;
+    protected EntityDimensions getDefaultDimensions(Pose pose) {
+        return super.getDefaultDimensions(pose).withEyeHeight(1.74F);
     }
 }

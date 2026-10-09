@@ -1,5 +1,13 @@
 package mod.gottsch.neo.gmm.core.entity.monster.zombie;
 
+
+
+
+
+import net.minecraft.world.item.component.DyedItemColor;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.Holder;
+import net.minecraft.core.registries.BuiltInRegistries;
 import mod.gottsch.neo.gmm.core.config.MobConfig;
 import mod.gottsch.neo.gmm.core.config.MobConfigHelper;
 import mod.gottsch.neo.gmm.core.effect.GMMMobEffects;
@@ -37,7 +45,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.entity.projectile.ProjectileUtil;
 import net.minecraft.world.item.BowItem;
-import net.minecraft.world.item.DyeableLeatherItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.ItemStack;
@@ -45,7 +52,6 @@ import net.minecraft.world.item.ProjectileWeaponItem;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.block.state.BlockState;
-import net.neoforged.neoforge.registries.ForgeRegistries;
 
 import javax.annotation.Nullable;
 import java.util.Optional;
@@ -139,9 +145,9 @@ public class Wight extends GMMMonster implements RangedAttackMob, ICastingMob {
     }
 
     @Override
-    public void defineSynchedData() {
-        super.defineSynchedData();
-        this.entityData.define(DATA_CASTING, false);
+    public void defineSynchedData(SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(DATA_CASTING, false);
     }
 
     /** True while {@code SummonThrallGoal}/{@code EnthrallGoal} is charging up a cast (see {@code WightModel}). */
@@ -226,8 +232,8 @@ public class Wight extends GMMMonster implements RangedAttackMob, ICastingMob {
     @Nullable
     @Override
     public SpawnGroupData finalizeSpawn(ServerLevelAccessor levelAccessor, DifficultyInstance difficultyInstance,
-                                         MobSpawnType spawnType, @Nullable SpawnGroupData groupData, @Nullable CompoundTag tag) {
-        groupData = super.finalizeSpawn(levelAccessor, difficultyInstance, spawnType, groupData, tag);
+                                         MobSpawnType spawnType, @Nullable SpawnGroupData groupData) {
+        groupData = super.finalizeSpawn(levelAccessor, difficultyInstance, spawnType, groupData);
         this.populateDefaultEquipmentSlots(levelAccessor.getRandom(), difficultyInstance);
         this.reassessWeaponGoal();
         return groupData;
@@ -239,13 +245,11 @@ public class Wight extends GMMMonster implements RangedAttackMob, ICastingMob {
      * {@code wight/shields} -- a bow-rolled one never does, both hands are already spoken for.
      */
     protected void populateDefaultEquipmentSlots(RandomSource randomSource, DifficultyInstance difficulty) {
-        Optional<Item> weapon = ForgeRegistries.ITEMS.tags()
-                .getTag(GMMTags.Items.WIGHT_WEAPONS).getRandomElement(randomSource);
+        Optional<Item> weapon = BuiltInRegistries.ITEM.getRandomElementOf(GMMTags.Items.WIGHT_WEAPONS, randomSource).map(Holder::value);
         weapon.ifPresent(item -> this.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(item)));
 
         if (!(this.getMainHandItem().getItem() instanceof BowItem) && randomSource.nextDouble() < shieldProbability()) {
-            Optional<Item> shield = ForgeRegistries.ITEMS.tags()
-                    .getTag(GMMTags.Items.WIGHT_SHIELDS).getRandomElement(randomSource);
+            Optional<Item> shield = BuiltInRegistries.ITEM.getRandomElementOf(GMMTags.Items.WIGHT_SHIELDS, randomSource).map(Holder::value);
             shield.ifPresent(item -> {
                 this.setItemSlot(EquipmentSlot.OFFHAND, new ItemStack(item));
                 // flavor only, matches the robe/weapon below -- neither piece drops
@@ -254,9 +258,7 @@ public class Wight extends GMMMonster implements RangedAttackMob, ICastingMob {
         }
 
         ItemStack robe = new ItemStack(Items.LEATHER_CHESTPLATE);
-        if (robe.getItem() instanceof DyeableLeatherItem dyeable) {
-            dyeable.setColor(robe, ROBE_COLOR);
-        }
+        robe.set(DataComponents.DYED_COLOR, new DyedItemColor(ROBE_COLOR, true));
         this.setItemSlot(EquipmentSlot.CHEST, robe);
         // flavor only, not loot -- neither piece drops
         this.handDropChances[EquipmentSlot.MAINHAND.getIndex()] = 0.0F;
@@ -289,8 +291,9 @@ public class Wight extends GMMMonster implements RangedAttackMob, ICastingMob {
 
     @Override
     public void performRangedAttack(LivingEntity target, float power) {
-        ItemStack itemStack = this.getProjectile(this.getItemInHand(ProjectileUtil.getWeaponHoldingHand(this, item -> item instanceof BowItem)));
-        AbstractArrow arrow = ProjectileUtil.getMobArrow(this, itemStack, power);
+        ItemStack weapon = this.getItemInHand(ProjectileUtil.getWeaponHoldingHand(this, item -> item instanceof BowItem));
+        ItemStack itemStack = this.getProjectile(weapon);
+        AbstractArrow arrow = ProjectileUtil.getMobArrow(this, itemStack, power, weapon);
         double dx = target.getX() - this.getX();
         double dy = target.getY(0.3333333333333333D) - arrow.getY();
         double dz = target.getZ() - this.getZ();
@@ -327,9 +330,9 @@ public class Wight extends GMMMonster implements RangedAttackMob, ICastingMob {
         if (!witherEnabled()) {
             return;
         }
-        MobEffectInstance existing = target.getEffect(GMMMobEffects.WITHERED.get());
+        MobEffectInstance existing = target.getEffect(GMMMobEffects.WITHERED);
         int amplifier = existing == null ? 0 : Math.min(maxWitherStacks() - 1, existing.getAmplifier() + 1);
-        target.addEffect(new MobEffectInstance(GMMMobEffects.WITHERED.get(), witherDuration(), amplifier, false, true, false), this);
+        target.addEffect(new MobEffectInstance(GMMMobEffects.WITHERED, witherDuration(), amplifier, false, true, false), this);
         if (target.getHealth() > target.getMaxHealth()) {
             target.setHealth(target.getMaxHealth());
         }
@@ -337,15 +340,15 @@ public class Wight extends GMMMonster implements RangedAttackMob, ICastingMob {
 
     // --- flavour / sounds -----------------------------------------------------------------------
 
+    /** Undead: Healing hurts, Harming heals, immune to Poison/Regeneration. See {@link IGMMMonster#isUndead}. */
     @Override
-    public MobType getMobType() {
-        return MobType.UNDEAD;
+    public boolean isUndead() {
+        return true;
     }
-
     @Override
     public void aiStep() {
         if (this.isSunBurnTick()) {
-            this.setSecondsOnFire(8);
+            this.igniteForSeconds(8);
         }
         super.aiStep();
     }

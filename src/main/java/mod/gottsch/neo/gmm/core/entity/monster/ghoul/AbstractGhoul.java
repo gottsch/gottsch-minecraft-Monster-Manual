@@ -11,12 +11,12 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.DifficultyInstance;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobSpawnType;
-import net.minecraft.world.entity.MobType;
 import net.minecraft.world.entity.SpawnGroupData;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -36,10 +36,6 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.block.state.BlockState;
-import net.neoforged.neoforge.common.capabilities.Capability;
-import net.neoforged.neoforge.common.capabilities.ForgeCapabilities;
-import net.neoforged.neoforge.common.util.LazyOptional;
-import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.ItemStackHandler;
 
 import javax.annotation.Nonnull;
@@ -59,7 +55,6 @@ import java.util.stream.IntStream;
  */
 public abstract class AbstractGhoul extends GMMMonster implements IGhoul {
     private final ItemStackHandler inventory = new ItemStackHandler(getInventoryMaxSize()); // example: 5 inventory slots
-    private final LazyOptional<IItemHandler> inventoryCapability = LazyOptional.of(() -> inventory);
 
     public static final int INVENTORY_MAX_SIZE = 5;
     public static final String INVENTORY_TAG = "mobInventory";
@@ -83,11 +78,11 @@ public abstract class AbstractGhoul extends GMMMonster implements IGhoul {
         this.reassessHuntingGoal();
     }
 
+    /** Undead: Healing hurts, Harming heals, immune to Poison/Regeneration. See {@link IGMMMonster#isUndead}. */
     @Override
-    public MobType getMobType() {
-        return MobType.UNDEAD;
+    public boolean isUndead() {
+        return true;
     }
-
     @Override
     protected SoundEvent getAmbientSound() {
         return SoundEvents.ZOMBIE_AMBIENT;
@@ -154,9 +149,9 @@ public abstract class AbstractGhoul extends GMMMonster implements IGhoul {
 
     @Override
     public SpawnGroupData finalizeSpawn(ServerLevelAccessor level, DifficultyInstance difficulty,
-                                        MobSpawnType spawnType, SpawnGroupData groupData, CompoundTag tag) {
+                                        MobSpawnType spawnType, SpawnGroupData groupData) {
         // vanilla
-        groupData =  super.finalizeSpawn(level, difficulty, spawnType, groupData, tag);
+        groupData =  super.finalizeSpawn(level, difficulty, spawnType, groupData);
 
         // tuning comes from the gmm:mob_config datapack registry, keyed by this mob's type id
         this.setCanOpenDoors(MobConfigHelper.get(level, EntityType.getKey(this.getType())).flag("canOpenDoors", true));
@@ -172,10 +167,10 @@ public abstract class AbstractGhoul extends GMMMonster implements IGhoul {
 
         double chance = this.random.nextDouble() * 1.5D * (double)difficulty.getSpecialMultiplier();
         if (chance > 1.0D) {
-            this.getAttribute(Attributes.FOLLOW_RANGE).addPermanentModifier(new AttributeModifier("random ghoul-spawn bonus", chance, AttributeModifier.Operation.MULTIPLY_TOTAL));
+            this.getAttribute(Attributes.FOLLOW_RANGE).addPermanentModifier(new AttributeModifier(GMMMonster.RANDOM_SPAWN_BONUS_ID, chance, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL));
         }
         if (this.random.nextFloat() < chance * 0.05F) {
-            this.getAttribute(Attributes.MAX_HEALTH).addPermanentModifier(new AttributeModifier("random ghoul-spawn bonus", this.random.nextDouble() * 3.0D + 1.0D, AttributeModifier.Operation.MULTIPLY_TOTAL));
+            this.getAttribute(Attributes.MAX_HEALTH).addPermanentModifier(new AttributeModifier(GMMMonster.RANDOM_SPAWN_BONUS_ID, this.random.nextDouble() * 3.0D + 1.0D, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL));
         }
         return groupData;
     }
@@ -184,7 +179,7 @@ public abstract class AbstractGhoul extends GMMMonster implements IGhoul {
     public void addAdditionalSaveData(CompoundTag tag) {
         super.addAdditionalSaveData(tag);
 
-        tag.put(INVENTORY_TAG, inventory.serializeNBT());
+        tag.put(INVENTORY_TAG, inventory.serializeNBT(this.registryAccess()));
     }
 
     @Override
@@ -192,22 +187,8 @@ public abstract class AbstractGhoul extends GMMMonster implements IGhoul {
         super.readAdditionalSaveData(tag);
 
         if (tag.contains(INVENTORY_TAG)) {
-            inventory.deserializeNBT(tag.getCompound(INVENTORY_TAG));
+            inventory.deserializeNBT(this.registryAccess(), tag.getCompound(INVENTORY_TAG));
         }
-    }
-
-    @Override
-    public <T> LazyOptional<T> getCapability(@Nonnull Capability<T> cap, @Nullable Direction side) {
-        if (cap == ForgeCapabilities.ITEM_HANDLER) {
-            return inventoryCapability.cast();
-        }
-        return super.getCapability(cap, side);
-    }
-
-    @Override
-    public void invalidateCaps() {
-        super.invalidateCaps();
-        inventoryCapability.invalidate();
     }
 
     @Override
@@ -222,8 +203,8 @@ public abstract class AbstractGhoul extends GMMMonster implements IGhoul {
     }
 
     @Override
-    protected void dropAllDeathLoot(DamageSource damageSource) {
-        super.dropAllDeathLoot(damageSource);
+    protected void dropAllDeathLoot(ServerLevel level, DamageSource damageSource) {
+        super.dropAllDeathLoot(level, damageSource);
 
         if (!this.level().isClientSide) {
             for (int i = 0; i < inventory.getSlots(); i++) {
@@ -270,7 +251,7 @@ public abstract class AbstractGhoul extends GMMMonster implements IGhoul {
     public void aiStep() {
         // set on fire if in sun
         if(burnsInSun() && this.isSunBurnTick()) {
-            this.setSecondsOnFire(getOnFireDuration());
+            this.igniteForSeconds(getOnFireDuration());
         }
         super.aiStep();
     }

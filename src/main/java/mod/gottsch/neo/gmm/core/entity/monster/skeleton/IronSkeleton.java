@@ -1,5 +1,7 @@
 package mod.gottsch.neo.gmm.core.entity.monster.skeleton;
 
+
+import mod.gottsch.neo.gmm.core.entity.monster.GMMMonster;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
@@ -43,10 +45,10 @@ public class IronSkeleton extends BowSkeleton {
 
     @Override
     public SpawnGroupData finalizeSpawn(ServerLevelAccessor level, DifficultyInstance difficulty,
-                                        MobSpawnType spawnType, SpawnGroupData groupData, CompoundTag tag) {
+                                        MobSpawnType spawnType, SpawnGroupData groupData) {
 
         double attackBonus = round(random.nextDouble() * 8D, 2);
-        this.getAttribute(Attributes.ATTACK_DAMAGE).addPermanentModifier(new AttributeModifier("random iron skeleton bonus", attackBonus, AttributeModifier.Operation.ADDITION));
+        this.getAttribute(Attributes.ATTACK_DAMAGE).addPermanentModifier(new AttributeModifier(GMMMonster.RANDOM_SPAWN_BONUS_ID, attackBonus, AttributeModifier.Operation.ADD_VALUE));
 
         return groupData;
     }

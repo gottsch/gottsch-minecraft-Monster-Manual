@@ -81,7 +81,7 @@ public class AlligatorGarModel<T extends Entity> extends EntityModel<T> {
 		mouth.xRot -= Mth.cos(age * speed) * radians + 0.05F;
 	}
 	@Override
-	public void renderToBuffer(PoseStack poseStack, VertexConsumer vertexConsumer, int packedLight, int packedOverlay, float red, float green, float blue, float alpha) {
-		bodyFront.render(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
+	public void renderToBuffer(PoseStack poseStack, VertexConsumer vertexConsumer, int packedLight, int packedOverlay, int color) {
+		bodyFront.render(poseStack, vertexConsumer, packedLight, packedOverlay, color);
 	}
 }

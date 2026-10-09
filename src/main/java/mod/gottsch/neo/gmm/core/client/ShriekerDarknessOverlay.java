@@ -9,7 +9,7 @@ import net.minecraft.world.effect.MobEffectInstance;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.neoforge.client.event.RenderGuiEvent;
 import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.common.EventBusSubscriber;
 
 /**
  * Draws a capped-opacity black screen overlay while the local player has
@@ -46,7 +46,7 @@ public class ShriekerDarknessOverlay {
         if (mc.player == null) {
             return;
         }
-        MobEffectInstance instance = mc.player.getEffect(GMMMobEffects.SHRIEKER_DARKNESS.get());
+        MobEffectInstance instance = mc.player.getEffect(GMMMobEffects.SHRIEKER_DARKNESS);
         if (instance == null) {
             return;
         }

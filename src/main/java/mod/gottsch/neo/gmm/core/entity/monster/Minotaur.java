@@ -1,5 +1,9 @@
 package mod.gottsch.neo.gmm.core.entity.monster;
 
+
+
+import net.minecraft.core.Holder;
+import net.minecraft.core.registries.BuiltInRegistries;
 import mod.gottsch.neo.gmm.core.entity.ai.goal.ChargeAttackGoal;
 import mod.gottsch.neo.gmm.core.entity.ai.goal.TallMeleeAttackGoal;
 import mod.gottsch.neo.gmm.core.tag.GMMTags;
@@ -29,7 +33,6 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
-import net.neoforged.neoforge.registries.ForgeRegistries;
 
 import javax.annotation.Nullable;
 import java.util.Arrays;
@@ -152,10 +155,9 @@ public class Minotaur extends GMMMonster implements IChargingMob {
 
     @Override
     public SpawnGroupData finalizeSpawn(ServerLevelAccessor level, DifficultyInstance difficulty,
-                                        MobSpawnType spawnType, @Nullable SpawnGroupData groupData,
-                                        @Nullable net.minecraft.nbt.CompoundTag tag) {
+                                        MobSpawnType spawnType, @Nullable SpawnGroupData groupData) {
         // super applies the gmm:mob_config attribute overrides and any companion pool
-        groupData = super.finalizeSpawn(level, difficulty, spawnType, groupData, tag);
+        groupData = super.finalizeSpawn(level, difficulty, spawnType, groupData);
         this.populateDefaultEquipmentSlots(level.getRandom(), difficulty);
         return groupData;
     }
@@ -167,16 +169,15 @@ public class Minotaur extends GMMMonster implements IChargingMob {
      */
     @Override
     protected void populateDefaultEquipmentSlots(RandomSource randomSource, DifficultyInstance difficulty) {
-        Optional<Item> weapon = ForgeRegistries.ITEMS.tags()
-                .getTag(GMMTags.Items.MINOTAUR_WEAPONS).getRandomElement(randomSource);
+        Optional<Item> weapon = BuiltInRegistries.ITEM.getRandomElementOf(GMMTags.Items.MINOTAUR_WEAPONS, randomSource).map(Holder::value);
         this.setItemSlot(EquipmentSlot.MAINHAND, weapon.map(ItemStack::new).orElse(ItemStack.EMPTY));
         this.setItemSlot(EquipmentSlot.OFFHAND, ItemStack.EMPTY);
     }
 
     @Override
-    public void defineSynchedData() {
-        super.defineSynchedData();
-        this.entityData.define(CHARGING, false);
+    public void defineSynchedData(SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(CHARGING, false);
     }
 
     @Override

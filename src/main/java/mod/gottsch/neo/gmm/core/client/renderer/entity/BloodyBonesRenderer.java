@@ -35,8 +35,8 @@ public class BloodyBonesRenderer<T extends BloodyBones> extends HumanoidMobRende
     }
 
     @Override
-    protected void setupRotations(T entity, PoseStack poseStack, float ageInTicks, float rotYaw, float partialTicks) {
-        super.setupRotations(entity, poseStack, ageInTicks, rotYaw, partialTicks);
+    protected void setupRotations(T entity, PoseStack poseStack, float ageInTicks, float rotYaw, float partialTicks, float scale) {
+        super.setupRotations(entity, poseStack, ageInTicks, rotYaw, partialTicks, scale);
 
         // hand the collapse amount to the model — it drives the skull drop / whole-body rise in
         // setupAnim (which runs after this) via part visibility + y-position.

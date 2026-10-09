@@ -1,5 +1,9 @@
 package mod.gottsch.neo.gmm.core.entity.monster.zombie;
 
+
+
+import mod.gottsch.neo.gmm.core.GMM;
+import net.minecraft.resources.ResourceLocation;
 import mod.gottsch.neo.gmm.core.config.MobConfigHelper;
 import mod.gottsch.neo.gmm.core.damagesource.GMMDamageTypes;
 import mod.gottsch.neo.gmm.core.entity.ai.goal.CastSpellGoal;
@@ -129,7 +133,7 @@ public class Bodak extends GMMMonster {
     private static final double DEFAULT_JERK_MAX_ANGLE_DEGREES = 12.0D;
     private static final int DEFAULT_JERK_PERIOD_TICKS = 16;
 
-    private static final UUID SUN_PANIC_SPEED_MODIFIER_UUID = UUID.fromString("6b2b8f2e-6b7a-4b7a-9a1a-2b6f2b6f2b6f");
+    private static final ResourceLocation SUN_PANIC_SPEED_MODIFIER_ID = ResourceLocation.fromNamespaceAndPath(GMM.MOD_ID, "bodak_sun_panic");
 
     // Withering Gaze: how long the cast takes to charge, the "don't cast this close" range buffer
     // (the melee goal handles point-blank instead), and the cooldown after a completed cast --
@@ -161,9 +165,9 @@ public class Bodak extends GMMMonster {
     }
 
     @Override
-    public void defineSynchedData() {
-        super.defineSynchedData();
-        this.entityData.define(DATA_GAZE_CHARGE, 0.0F);
+    public void defineSynchedData(SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(DATA_GAZE_CHARGE, 0.0F);
     }
 
     @Override
@@ -451,25 +455,25 @@ public class Bodak extends GMMMonster {
         if (speed == null) {
             return;
         }
-        AttributeModifier modifier = new AttributeModifier(SUN_PANIC_SPEED_MODIFIER_UUID,
-                "Sunlight panic", sunPanicSpeedBoost(), AttributeModifier.Operation.ADDITION);
+        AttributeModifier modifier = new AttributeModifier(SUN_PANIC_SPEED_MODIFIER_ID,
+                sunPanicSpeedBoost(), AttributeModifier.Operation.ADD_VALUE);
         boolean panicking = sunPanicEnabled() && this.isOnFire();
         if (panicking) {
-            if (!speed.hasModifier(modifier)) {
+            if (!speed.hasModifier(SUN_PANIC_SPEED_MODIFIER_ID)) {
                 speed.addTransientModifier(modifier);
             }
-        } else if (speed.hasModifier(modifier)) {
-            speed.removeModifier(modifier);
+        } else if (speed.hasModifier(SUN_PANIC_SPEED_MODIFIER_ID)) {
+            speed.removeModifier(SUN_PANIC_SPEED_MODIFIER_ID);
         }
     }
 
     // --- flavour / sounds -----------------------------------------------------------------------
 
+    /** Undead: Healing hurts, Harming heals, immune to Poison/Regeneration. See {@link IGMMMonster#isUndead}. */
     @Override
-    public MobType getMobType() {
-        return MobType.UNDEAD;
+    public boolean isUndead() {
+        return true;
     }
-
     @Override
     protected void customServerAiStep() {
         super.customServerAiStep();
@@ -569,7 +573,7 @@ public class Bodak extends GMMMonster {
             }
         } else {
             if (this.isSunBurnTick()) {
-                this.setSecondsOnFire(8);
+                this.igniteForSeconds(8);
                 this.hurt(this.damageSources().onFire(), (float) sunBonusDamage());
             }
             updateSunPanic();
