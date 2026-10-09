@@ -1,11 +1,51 @@
-# Changelog for gottsch's Monster Manual (Forge 1.20.1)
+# Changelog for gottsch's Monster Manual (NeoForge 1.21.1)
 
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.1.0] - 2026-08-20
+## [1.1.0] - unreleased
+
+First NeoForge 1.21.1 release. Same content as Forge 1.20.1 **1.1.0**: every mob, goal, spell,
+model, renderer, texture, sound, tag and `gmm:mob_config` key listed below is in this build. There
+was no NeoForge 1.0.x. The 1.0.x notes further down are kept because their content ships here too.
+
+### Porting notes (NeoForge 1.21.1) -- read these if you consume gmm
+
+- **Package** `mod.gottsch.forge.gmm` is now `mod.gottsch.neo.gmm`. The mod id is still `gmm`. The
+  Maven coordinate is `gottsch:monster-manual-neoforge-1.21.1:1.1.0`. Requires GottschCore
+  `[2.7.0,3.0.0)`.
+- **Undead is now partly your job.** 1.20.5 removed `MobType`, and gmm registers no entity types, so
+  it can't tag its own mobs. `IGMMMonster#isUndead()` keeps what a class can do for itself: Healing
+  hurts, Harming heals, and Poison/Regeneration do nothing. Smite, the Wither leaving the mob alone,
+  and vanilla mobs that hunt undead all read `#minecraft:undead`. Add your types to it from your
+  `EntityTypeTagsProvider` with `GMMVanillaTags.addTo(this::tag, type, MobClass.class)`.
+- **Ghoul inventory** is no longer exposed as a capability automatically. NeoForge registers entity
+  capabilities per type: call `GMMCapabilities.registerGhoulInventory(event, type)` from your
+  `RegisterCapabilitiesEvent` listener if something needs to reach into it.
+- **Ownership** of non-gmm mobs is a data attachment, `gmm:ownership` (the old capability id). It
+  writes nothing for an entity nobody owns.
+- **Melee reach** follows 1.20.5's bounding-box model. `ExtendedReachMeleeAttackGoal` and
+  `BlackPudding#getAttackBoundingBox` carry the lash bonus. `TallMeleeAttackGoal` keeps its own
+  body-shaped reach. Big mobs may feel slightly different up close; report anything that reads wrong.
+- **Eye heights** stay in gmm (`getDefaultDimensions(..).withEyeHeight(..)`), so you don't need
+  `EntityType.Builder.eyeHeight`. Bow Skeleton's old riding offset has no entity-side equivalent in
+  1.21; set `EntityType.Builder.ridingOffset(-0.7F)` (vanilla skeleton's) if it matters to you.
+- Attribute modifiers now have ids: `gmm:random_spawn_bonus`, `gmm:charge_speed`, `gmm:charge_damage`,
+  `gmm:bodak_sun_panic`, `gmm:effect.withered`, `gmm:effect.paralyzed`.
+- `Mimic#setLootTable(ResourceLocation)` is unchanged. Table files live under `loot_table/` (singular) in 1.21.
+- gmm's own generated tags moved to the singular 1.21 folders (`tags/item`, `tags/entity_type`). The
+  tag ids are unchanged.
+
+### Development
+
+- New dev-only `testmod` source set: `gmmtest`, a reference consumer that registers every gmm mob and
+  spell (Dungeon Denizens' wiring and `mob_config`). It is loaded by the run configs and never
+  packaged. `./gradlew runGameTestServer` spawns and ticks every mob headlessly (no EULA needed), and
+  each launch checks renderer coverage, `isUndead()` against `#minecraft:undead`, and that the
+  `mob_config` entries loaded.
+
 
 ### Added
 - 🗿 **Stone Colossus** — a tall, lean armoured construct that stands as scenery until someone walks
