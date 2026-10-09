@@ -1,0 +1,53 @@
+modLoader="javafml" #mandatory
+loaderVersion="${loader_version_range}"
+
+# License
+license="GNU GPLv3"
+
+# A URL to refer people to when problems occur with this mod
+issueTrackerURL="https://github.com/gottsch/gottsch-minecraft-Monster-Manual/issues" #optional
+
+[[mods]] #mandatory
+modId="${mod_id}" #mandatory
+version="${mod_version}" #mandatory
+displayName="gottsch's Monster Manual" #mandatory
+
+# A URL to query for updates for this mod.
+updateJSONURL="https://raw.githubusercontent.com/gottsch/gottsch-minecraft-Monster-Manual/neoforge-1.21.1-main/update.json"
+
+# A URL for the "homepage" for this mod, displayed in the mod UI
+displayURL="https://www.curseforge.com/minecraft/mc-mods/gottschs-monster-manual" #optional
+
+# A file name (in the root of the mod JAR) containing a logo for display
+logoFile="monster_manual_mod_logo.png" #optional
+
+# A text field displayed in the mod UI
+credits="" #optional
+
+# A text field displayed in the mod UI
+authors="gottsch" #optional
+
+# The description text for the mod (multi line!) (#mandatory)
+description="A mod that adds a classical set of mobs to your Minecraft world. The main influence of most of these creatures is from playing Ultima IV & V back in the day."
+
+[[dependencies.gmm]]
+modId="neoforge"
+type="required"
+versionRange="${neo_version_range}"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.gmm]]
+modId="minecraft"
+type="required"
+versionRange="${minecraft_version_range}"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.gmm]]
+modId="gottschcore"
+type="required"
+versionRange="${gottschcore_version_range}"
+# gmm builds on gottschcore, so gottschcore must load first -> gmm loads AFTER it
+ordering="AFTER"
+side="BOTH"
