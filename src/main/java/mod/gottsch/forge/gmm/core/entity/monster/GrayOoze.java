@@ -188,8 +188,15 @@ public class GrayOoze extends GMMMonster {
     public static AttributeSupplier.Builder createAttributes() {
         return Monster.createMonsterAttributes()
                 .add(Attributes.MAX_HEALTH, 25.0D)
-                // deliberately slow — a stationary ambusher, not a chaser
-                .add(Attributes.MOVEMENT_SPEED, 0.12D);
+                // Still the slowest of the ooze family, and still an ambusher rather than a chaser
+                // -- but 0.12 made it IGNORABLE (raised 0.12 -> 0.14, 2026-09-19). This mob deals
+                // zero hp damage; its entire threat is the one corrosion hit. A player who simply
+                // keeps walking never pays that cost, so the ambush lands once and the mob is
+                // scenery. The family ladder is the constraint on how far this can go: Gelatinous
+                // Cube 0.15, Ochre Jelly 0.18, Black Pudding 0.22 (under a Zombie's 0.23 on
+                // purpose). The Gray Ooze has to stay under the Cube to keep "slowest, an ambusher"
+                // true, so 0.14 is the whole budget available without re-ordering the roster.
+                .add(Attributes.MOVEMENT_SPEED, 0.14D);
         // no ATTACK_DAMAGE override: its attack deals zero HP damage, see doHurtTarget
     }
 

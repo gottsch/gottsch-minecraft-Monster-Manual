@@ -210,8 +210,10 @@ public class StoneColossus extends GMMMonster implements IDormantMob, ISlammingM
                 .add(Attributes.ARMOR_TOUGHNESS, 6.0D)
                 .add(Attributes.FOLLOW_RANGE, 32.0D)
                 // slower than the Minotaur (0.23): the weight has to cost it something, and a boss
-                // you cannot walk away from is a boss with no shape to its fight
-                .add(Attributes.MOVEMENT_SPEED, 0.17D);
+                // you cannot walk away from is a boss with no shape to its fight. Raised from 0.17
+                // on 2026-09-17 -- at that speed backing out of its arena was free, which took the
+                // pressure off the fight rather than shaping it.
+                .add(Attributes.MOVEMENT_SPEED, 0.19D);
     }
 
     /**

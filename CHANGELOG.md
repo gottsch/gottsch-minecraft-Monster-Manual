@@ -5,26 +5,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
-
-### Fixed
-- **The Stone Colossus could be frozen mid-rise for ever.** `IDormantMob` synched the server's
-  `tickCount` at the moment the rise began and the model measured it against its own `ageInTicks`
-  — but `tickCount` is per-side, starting when the entity was created on *that* client. A colossus
-  woken out of view, or seen after a chunk reload, read a start tick far in its own future, so the
-  blend clamped at 0 and it stayed a statue while fighting. The rise now uses the same
-  flag-and-per-side-clock shape as the slam, burst and heave: a synched `waking` boolean, the
-  server counting the window inside `DormancyGoal`, and each client starting its own clock the
-  tick it first sees the flag. `getWakeStartTick`/`setWakeStartTick`/`getDormancyTickCount` and
-  `NEVER_WOKE` are gone, replaced by `isWaking`/`setWaking`,
-  `getWakeAnimStartTick`/`setWakeAnimStartTick` and `NOT_WAKING`.
+## [1.1.0] - 2026-08-20
 
 ### Added
-- **Stone Colossus gem layer** (`StoneColossusGemLayer`) — the chest and belt gems drawn full-bright
-  through `RenderType.eyes`, and **gated on dormancy**: dark while the mob is scenery, lit from the
-  first tick of the rise. Unlike GMM's other eye layers this one has a gameplay job — it is how a
-  player tells a statue from a boss that has already noticed them across a room. Inherited by
-  Dungeons2's `ScaledStoneColossusRenderer` with no change there.
 - 🗿 **Stone Colossus** — a tall, lean armoured construct that stands as scenery until someone walks
   up to it. Slow, immovable (knockback resistance 1.0) and heavily armoured rather than
   high-health: 120 HP behind 14 armour and 6 toughness, a low attack rate, and speed under the
@@ -42,10 +25,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     the goal selector hands out at priority 0 instead, so the mob still falls, burns and takes
     damage while owning no behaviour. It cannot starve the *target* goals, since `Mob` keeps a
     separate `GoalSelector` for those with its own locked flags, so it clears the target each tick.
-  - **A start tick, not a countdown.** The first cut synched a counter and decremented it every
-    tick; the client saw twenty discrete values a second and the rise visibly stepped. A start tick
-    is synched once and the model measures against `ageInTicks` (`tickCount + partialTick`), so the
-    animation is smooth at any frame rate and costs one packet instead of one per tick.
+  - **A flag and a per-side clock, not a synched tick.** Two earlier cuts were wrong. Synching a
+    counter and decrementing it every tick made the client see twenty discrete values a second, so
+    the rise visibly stepped. Synching the server's `tickCount` and measuring it against the
+    model's own `ageInTicks` was worse and subtler — `tickCount` is per side, so a colossus woken
+    out of view or seen after a chunk reload read a start tick far in its own future and stayed a
+    statue for ever. What works is the slam's shape: a synched boolean, the server counting the
+    window in `DormancyGoal`, and each client starting its own clock the tick it first sees the
+    flag. The animation is smooth at any frame rate and costs one packet instead of one per tick.
 
   `StoneColossusModel` extends `HumanoidModel` for its *animation* the way `MinotaurModel` does —
   seven empty vanilla parts, posed by `super.setupAnim`, read back onto the real rig. Its rig
@@ -53,7 +40,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   replace them, leaving two parts one keystroke apart, one of which draws nothing. The statue is a
   distinct pose (head bowed, shoulders forward, forearms drawn up) that the rise smoothsteps out
   of, and the six belt cloths are pushed by the leg on their own side, each only in the direction
-  that leg can actually push it.
+  that leg can actually push it. Its chest and belt gems are a full-bright layer
+  (`StoneColossusGemLayer`) **gated on dormancy** — dark while it is scenery, lit from the first
+  tick of the rise, so a player can tell a statue from a boss that has already noticed them.
 
   Damage rules are the mob's identity too: `IS_PROJECTILE` damage ×0.5 ("arrows chip, they do not
   wound") and `minecraft:pickaxes` ×1.75 — the answer to a thing made of stone is to mine it. Any
@@ -139,22 +128,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   property of the world, so a library that cannot know whose walls these are throws nothing of its
   own.
 
-### Changed
-- 🐂 **Minotaur swings every 30 ticks, not 20.** Mark, 2026-09-14: "the minotaur strikes a
-  little too fast for such a powerful swing." Twelve damage landing three times in two seconds reads
-  as a flurry rather than as a heavy blow — the same argument as the Stone Colossus's 45, scaled to
-  the faster of the two bruisers, whose threat is the charge and the pursuit rather than the weight
-  of one hit.
-- 🐂 **Minotaur now uses `TallMeleeAttackGoal`.** At 2.6 blocks it has a milder version of the same
-  problem — a player on a one-block step is measured further away than they look. Consumers that
-  replace the Minotaur's melee goal (Dungeons2 swaps it for a pursuing one) must re-add the *tall*
-  goal, not the vanilla one: `TallMeleeAttackGoal` is a `MeleeAttackGoal`, so a filter that removes
-  the latter takes this with it.
-
 - 🐂 **Minotaur** — a bull-headed brute built to close distance violently. Slow, heavy, hard to
   stagger and hard to run from: high knockback resistance, an attack that throws its target, and a
   charge (below). Ships with `MinotaurModel`, `MinotaurRenderer` and the `gmm:minotaur/weapons` item
   tag.
+
+  It swings every **30 ticks**, not vanilla's 20: twelve damage landing three times in two seconds
+  reads as a flurry rather than a heavy blow. Its melee goal is `TallMeleeAttackGoal` (below), since at
+  2.6 blocks a player on a one-block step is measured further away than they look. Consumers that
+  replace the Minotaur's melee goal (Dungeons2 swaps it for a pursuing one) must re-add the *tall*
+  goal, not the vanilla one: `TallMeleeAttackGoal` is a `MeleeAttackGoal`, so a filter that removes
+  the latter takes this with it.
 
   The tag is **deliberately empty in gmm**, unlike every other weapon pool here. The Minotaur has a
   signature weapon — a great axe — and the art for it lives in the consumers, so a vanilla-axe
@@ -224,6 +208,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   carries a real weapon rather than the warband's chipped stone one. An emptied pool falls back to
   `gmm:orc/weapons` rather than to bare fists.
 
+  He always spawns in his **full kit** — both shoulder pads, the hair and the bracers — because the
+  kit is what tells a player at a glance which orc is the chief. `Orc#finalizeSpawn` rolls each bit
+  as an independent coin flip, so `OrcWarlord#finalizeSpawn` sets all four *after* calling `super`.
+  The bits are named by `Orc.ALL_APPAREL`, composed from the four position constants (now
+  `protected`) rather than written as `0b1111`, so a fifth model part is worn by whoever asks for the
+  full set. `ALL_APPAREL` includes HAIR, which is not armour: the byte is one model-part field.
+
 - ⚓ **Anchoring, for every GMM mob** — a consumer can post any GMM mob to guard a position by
   calling vanilla's own `Mob#restrictTo(BlockPos, int)` on the instance it just placed. An anchored
   mob keeps to its post while idle and never despawns; an unanchored one is untouched, so this is
@@ -259,84 +250,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (`LivingEntity#isDamageSourceBlocked`) answers "not blocked" the moment the source position is
   null, because it cannot tell whether the hit came from in front.
 
-### Changed
-- 🛡️ **Six spells now carry their caster: Harm, Disintegrate, Fire Spout, Firewall Column, Spike
-  Growth and Withering Gaze.** Each hurts through the new `source(level, key, this, owner)`. Until
-  now **no shield could block any of them**, whichever way the player faced — see the `source`
-  entry above. Carrying the entities also gives the kill credit, the retaliation target and the
-  "… by X" death message their attacker.
-
-  **Balance note:** these damage types are `when_caused_by_living_non_player`, which only scales
-  with difficulty when a living non-player caused the damage — so until now none of them scaled, and
-  now they do, as arrows always have. On Hard, Harm's 6 becomes 9. Paralysis and Rock already carried
-  their entities and are unchanged. **Bodak's Death Gaze is deliberately not changed** (it builds the
-  same entity-less source): making the Bodak's near-lethal stare shield-blockable is a balance call
-  about the Bodak, not a fix.
-
-- 👑 **The Orc Warlord now spawns in his full kit.** `Orc#finalizeSpawn` rolls each apparel bit —
-  both shoulder pads, the hair, the bracers — as an independent coin flip, and the Warlord inherited
-  that, so one chief in sixteen turned up wearing none of it and most turned up wearing some. The kit
-  is what tells a player at a glance which orc is the chief, so it now has to be true of every one of
-  them: `OrcWarlord#finalizeSpawn` sets all four bits *after* calling `super`, which is where the roll
-  happens. Everything else `super` does — the weapon from his own pool, the spawn bonuses, the ranged
-  roll he forces back off — is unchanged.
-
-  The bits are named by a new `Orc.ALL_APPAREL`, composed from the four positions rather than written
-  as `0b1111`, so a fifth model part is worn by whoever asks for the full set without anyone
-  remembering to widen a literal. The four position constants went from `private` to `protected` for
-  it. Note `ALL_APPAREL` includes HAIR, which is not armour: the byte is one model-part field and the
-  full rig is the useful thing to name.
-
-- 🗡️ **`OrcModel` and `OrcShamanModel` no longer use the hidden-cubes hack.** Both registered the
-  seven vanilla parts as *real cubes* and hid them with `visible = false`, then placed a held item by
-  hand-tuning the hidden `rightArm` to `(-6.5, 4.0)` so the inherited `translateToHand` happened to
-  land near the fist. The vanilla names are now registered with **no cubes** and `translateToHand`
-  walks the real arm chain (`orcBody > orc*Arm > orc*LowerArm`), which is the same pattern
-  `MinotaurModel` uses.
-
-  The hack drifted with the swing, which is exactly what the model's original comment complained
-  about ("can't get the held item to rotate/swing properly with the arm") — a single rotation about
-  the hidden arm's pivot cannot reproduce a two-bone arm with an elbow bend. Measured distance from
-  the item origin to the forearm's fist point: **0.64 units at rest, 3.03 at ±60° of swing**; the chain
-  version is 0.00 at every angle. Right-hand placement at rest is unchanged to within 0.1 units, so
-  nothing visibly moves for an existing orc. The hidden cubes also overlapped real orc UV regions
-  (`texOffs(0,0)` is the torso), harmless only because they never rendered.
-
-- ⚓ **Grave Zombie, Animated Armor and Wood Golem now share the one anchor implementation.** All
-  three had grown their own copy of the same `checkDespawn` override, the same `isWithinRestriction`
-  exemption and the same `HomePosX/Y/Z` + `HomeRadius` save-data block. Behaviour is unchanged and
-  the tag names are kept verbatim, so guardians already standing in an existing world stay anchored;
-  each mob now only states the part that was ever specific to it — the grave zombie's anchor holds
-  until it rises (its active *phase*, not merely having a target) and the armour's until it
-  activates, both now expressed as one-line `isAnchorSuspended()` overrides.
-
-### Fixed
-- 🗡️ **Orc / Orc Shaman offhand items rendered in the wrong place.** Only the *right* hidden
-  vanilla arm was ever hand-tuned; `left_arm` kept vanilla's `(5.0, 2.0)`, so an item in an Orc's
-  offhand drew **1.5 units across and 2 up** from the actual left fist. Latent because the Orc equips
-  an empty offhand by default — it would have appeared the moment a consumer gave one a shield.
-  Fixed by the `translateToHand` refactor above, which derives both hands from the real geometry.
-- 🧟 **Grave Zombie** — a dormant zombie came back from a chunk unload/reload **visible**, showing as
-  a zombie head stuck in the floor rather than as a hidden grave. Being burrowed is two things — AI
-  off and invisible — and only the first survived a save: `Mob` persists `NoAi`, but nothing at all
-  persists the `Invisible` shared-flag bit (`Entity#saveWithoutId` writes `Glowing`, `Silent`,
-  `NoGravity` and `Invulnerable`, and vanilla otherwise only ever gets invisibility from a potion
-  effect, which is persisted in its own right). The head showed because `GraveZombieModel` sinks the
-  rig 26 model units and deliberately stops short of burying it, on the assumption that a fully
-  buried zombie is invisible anyway. `readAdditionalSaveData` now restores the flag alongside the
-  phase it already restored, so the state can no longer come back half-applied. Nothing else changes:
-  a zombie caught mid-reburrow still finishes sinking and sets the flag itself.
-- 🧟 **Grave Zombie** — the buried pose now sinks the rig *fully* under the ground plane
-  (`SINK_DEPTH` 26 → 34 model units). The humanoid rig spans model y -8 to 24, so 32 is the exact
-  depth that drops the crown of the head to ground level and the rest is margin for the hat and armor
-  layers. The old 26 was chosen deliberately, on the reasoning that a buried zombie is invisible and
-  the sink only had to read as "emerging" mid-transition — so the invisibility flag was the only
-  thing hiding the last ~5 units. It isn't any more. Visible effect while surfacing: the zombie now
-  climbs half a block further out of the ground over the same telegraph.
-
-## [1.1.0] - 2026-08-20
-
-### Added
 - 🟪 **Black Pudding** — the ooze family's fastest and deadliest member. Where the Gelatinous Cube
   is a slow trap and the Gray Ooze a stationary ambusher, this one actively runs you down: 30 HP,
   7 attack damage, and 0.22 movement speed — the family's fastest by a clear margin (Ochre Jelly's
@@ -363,11 +276,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     damage category. Unlike Ochre Jelly, which splits on *any* melee hit, this is narrow on purpose:
     a pickaxe, a shovel, a bare fist, arrows, or fire all kill it without splitting, and that
     asymmetry is the mechanic's entire counterplay.
-- Split children are bounded and strictly weaker in kind, not just in numbers: `maxGeneration`
-  (default 3) caps the chain, each generation halves max health, and **only a generation-0 adult can
-  lash** — so only the adult has the extended reach, and the strike itself is the tell for which one
+- Split children are bounded and strictly weaker in kind, not just in numbers: each pudding has its
+  own split budget, `maxSplits` (default 1, saved as `SplitsRemaining` so a chunk reload can't refill
+  it), `maxGeneration` (default 3) caps the chain, each generation halves max health, and **only a
+  generation-0 adult can lash** — so only the adult has the extended reach, and the strike itself is the tell for which one
   out-reaches you. Without that, a corridor of puddings would be an unbroken wall of long-reach
-  attackers with no gap to retreat through.
+  attackers with no gap to retreat through. One adult yields at most `s + s² + … + s^G` descendants
+  (`s = maxSplits`, `G = maxGeneration`), which is 3 at the defaults.
 - **`TendrilRenderer`** — shared, library-level geometry for "a limb that reaches far beyond its
   body": a tapered, arcing tube generated between two points, with length, taper and curvature all
   continuous parameters. Endpoints are resolved per frame rather than baked, so a caller can either
@@ -375,6 +290,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   grapple-and-reel tentacle). Uses the caller's own `VertexConsumer`, so the tube inherits its
   parent's texture, render type, lighting and hurt-flash for free — deliberately not the beacon-beam
   render type, which is full-bright and translucent and would make a wet physical limb glow.
+- **`ExtendedReachMeleeAttackGoal`** — a `MeleeAttackGoal` whose reach takes a supplied bonus, so a
+  mob can vary it live or return zero. Needed because overriding `Mob#getMeleeAttackRangeSqr` looks
+  like the hook but does nothing for melee: in 1.20.1 `MeleeAttackGoal` never calls it, and its own
+  `getAttackReachSqr` recomputes the range inline from `mob.getBbWidth()`. Black Pudding uses it; the
+  planned Roper/Reaper tentacle will need the same.
 - `BlackPuddingModel` — a single body cube at vanilla slime's exact dimensions, so the family keeps
   one silhouette. It needs its own model class purely to host the procedural lash; there is no other
   geometry. Decorative cuboids were tried in three passes (four corner tendrils, then trailing slime
@@ -383,6 +303,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   outer layer: a black pudding is opaque.
 
 ### Changed
+- 🛡️ **Six spells now carry their caster: Harm, Disintegrate, Fire Spout, Firewall Column, Spike
+  Growth and Withering Gaze.** Each hurts through the new `source(level, key, this, owner)`. Until
+  now **no shield could block any of them**, whichever way the player faced — see the `source`
+  entry above. Carrying the entities also gives the kill credit, the retaliation target and the
+  "… by X" death message their attacker.
+
+  **Balance note:** these damage types are `when_caused_by_living_non_player`, which only scales
+  with difficulty when a living non-player caused the damage — so until now none of them scaled, and
+  now they do, as arrows always have. On Hard, Harm's 6 becomes 9. Paralysis and Rock already carried
+  their entities and are unchanged. **Bodak's Death Gaze is deliberately not changed** (it builds the
+  same entity-less source): making the Bodak's near-lethal stare shield-blockable is a balance call
+  about the Bodak, not a fix.
+
+- 🗡️ **`OrcModel` and `OrcShamanModel` no longer use the hidden-cubes hack.** Both registered the
+  seven vanilla parts as *real cubes* and hid them with `visible = false`, then placed a held item by
+  hand-tuning the hidden `rightArm` to `(-6.5, 4.0)` so the inherited `translateToHand` happened to
+  land near the fist. The vanilla names are now registered with **no cubes** and `translateToHand`
+  walks the real arm chain (`orcBody > orc*Arm > orc*LowerArm`), which is the same pattern
+  `MinotaurModel` uses.
+
+  The hack drifted with the swing, which is exactly what the model's original comment complained
+  about ("can't get the held item to rotate/swing properly with the arm") — a single rotation about
+  the hidden arm's pivot cannot reproduce a two-bone arm with an elbow bend. Measured distance from
+  the item origin to the forearm's fist point: **0.64 units at rest, 3.03 at ±60° of swing**; the chain
+  version is 0.00 at every angle. Right-hand placement at rest is unchanged to within 0.1 units, so
+  nothing visibly moves for an existing orc. The hidden cubes also overlapped real orc UV regions
+  (`texOffs(0,0)` is the torso), harmless only because they never rendered.
+
+- ⚓ **Grave Zombie, Animated Armor and Wood Golem now share the one anchor implementation.** All
+  three had grown their own copy of the same `checkDespawn` override, the same `isWithinRestriction`
+  exemption and the same `HomePosX/Y/Z` + `HomeRadius` save-data block. Behaviour is unchanged and
+  the tag names are kept verbatim, so guardians already standing in an existing world stay anchored;
+  each mob now only states the part that was ever specific to it — the grave zombie's anchor holds
+  until it rises (its active *phase*, not merely having a target) and the armour's until it
+  activates, both now expressed as one-line `isAnchorSuspended()` overrides.
 
 - **Orc and Orc Shaman skin retextured.** The skin was a cool steel blue (`#37627A`) painted as a
   smooth gradient — the orc's body panel alone carried 164 unique colours, its head another 136,
@@ -400,12 +355,28 @@ Originals and the generator live in `art/` (`art/reskin_orc.py`, `art/textures/e
 there for a future orc variant.
 
 ### Fixed
-- **Extended melee reach never actually applied.** Overriding `Mob#getMeleeAttackRangeSqr` looks like
-  the hook — other vanilla code paths do consult it — but in 1.20.1 `MeleeAttackGoal` never calls it;
-  its own `getAttackReachSqr` recomputes the range inline from `mob.getBbWidth()`, so the override was
-  silently ignored. Added `ExtendedReachMeleeAttackGoal`, which overrides the goal's own method and
-  takes a supplied bonus so a mob can vary it live or return zero. Black Pudding uses it; the planned
-  Roper/Reaper tentacle will need the same.
+- 🗡️ **Orc / Orc Shaman offhand items rendered in the wrong place.** Only the *right* hidden
+  vanilla arm was ever hand-tuned; `left_arm` kept vanilla's `(5.0, 2.0)`, so an item in an Orc's
+  offhand drew **1.5 units across and 2 up** from the actual left fist. Latent because the Orc equips
+  an empty offhand by default — it would have appeared the moment a consumer gave one a shield.
+  Fixed by the `translateToHand` refactor above, which derives both hands from the real geometry.
+- 🧟 **Grave Zombie** — a dormant zombie came back from a chunk unload/reload **visible**, showing as
+  a zombie head stuck in the floor rather than as a hidden grave. Being burrowed is two things — AI
+  off and invisible — and only the first survived a save: `Mob` persists `NoAi`, but nothing at all
+  persists the `Invisible` shared-flag bit (`Entity#saveWithoutId` writes `Glowing`, `Silent`,
+  `NoGravity` and `Invulnerable`, and vanilla otherwise only ever gets invisibility from a potion
+  effect, which is persisted in its own right). The head showed because `GraveZombieModel` sinks the
+  rig 26 model units and deliberately stops short of burying it, on the assumption that a fully
+  buried zombie is invisible anyway. `readAdditionalSaveData` now restores the flag alongside the
+  phase it already restored, so the state can no longer come back half-applied. Nothing else changes:
+  a zombie caught mid-reburrow still finishes sinking and sets the flag itself.
+- 🧟 **Grave Zombie** — the buried pose now sinks the rig *fully* under the ground plane
+  (`SINK_DEPTH` 26 → 34 model units). The humanoid rig spans model y -8 to 24, so 32 is the exact
+  depth that drops the crown of the head to ground level and the rest is margin for the hat and armor
+  layers. The old 26 was chosen deliberately, on the reasoning that a buried zombie is invisible and
+  the sink only had to read as "emerging" mid-transition — so the invisibility flag was the only
+  thing hiding the last ~5 units. It isn't any more. Visible effect while surfacing: the zombie now
+  climbs half a block further out of the ground over the same telegraph.
 
 - **Shrieker and Violet Fungus can no longer be pushed out of place.** Both are rooted plants, but `setNoAi(true)` and `MOVEMENT_SPEED 0` only stop them moving *themselves* — neither touches physics, so entity collision (`EntitySelector.pushableBy` → `Entity.isPushable`) let a player walking into one slide it across the floor. Both now override `isPushable()` to `false`, as vanilla's `ArmorStand` does for the same reason. Deliberately code rather than datapack: a pushable plant is a bug in any pack.
 - Shrieker and Violet Fungus now ship `KNOCKBACK_RESISTANCE 1.0`, so a *hit* no longer slides them either — the same visual bug arriving by the other route, and the likelier one since they are monsters and get attacked. Unlike `isPushable` this stays a knob: `GMMMonster#applyConfigAttributes` overwrites it from a `mob_config`'s `knockbackResistance` when a pack sets one.
