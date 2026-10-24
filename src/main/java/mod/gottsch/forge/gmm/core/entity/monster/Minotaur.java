@@ -46,6 +46,14 @@ import java.util.Optional;
  * own. An empty pool leaves the Minotaur bare-fisted, which is a legitimate look for it (see
  * {@link #populateDefaultEquipmentSlots}), unlike the Orc, whose empty hands mean "thrower".
  *
+ * <p><b>Hitbox width decides whether it uses doorways.</b> The pathfinder sizes a mob as
+ * {@code floor(width + 1)} blocks, so at exactly 1.0 wide it counts as two and will not path through
+ * a 1-wide doorway or corridor; at 0.9 it will (see {@link Orc} for the full rule). Staying at 1.0 is
+ * a legitimate choice for a brute that is meant to break walls rather than walk through doors, but it
+ * is a choice: a 1.0 Minotaur cannot follow a player down a 1-wide hallway either. Its melee is
+ * {@link TallMeleeAttackGoal}, whose horizontal reach is {@code 2w + targetWidth}: 2.6 blocks against
+ * a player at 1.0, 2.4 at 0.9.
+ *
  * @author Mark Gottschling on 9/7/2026
  */
 public class Minotaur extends GMMMonster implements IChargingMob {

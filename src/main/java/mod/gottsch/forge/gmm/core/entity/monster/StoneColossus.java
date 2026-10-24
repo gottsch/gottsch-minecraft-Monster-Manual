@@ -53,6 +53,11 @@ import net.minecraft.world.level.Level;
  *
  * <p>Construct, not undead: immune to poison and wither, <em>not</em> immune to fire.
  *
+ * <p>Too big for doors, by design. At 1.0 wide or more the pathfinder counts it as two blocks
+ * ({@code floor(width + 1)}, see {@link Orc}), so it never paths through a 1-wide doorway, and its
+ * height rules one out anyway. Do not narrow it to make it fit: it reaches a player through
+ * {@link StalkGoal} and {@link TallMeleeAttackGoal}, whose reach comes from the hitbox width.
+ *
  * @author Mark Gottschling on 9/13/2026
  */
 public class StoneColossus extends GMMMonster implements IDormantMob, ISlammingMob, IBurstingMob, IHurlingMob {

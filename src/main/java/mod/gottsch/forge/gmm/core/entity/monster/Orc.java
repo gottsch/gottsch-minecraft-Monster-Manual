@@ -1,6 +1,7 @@
 package mod.gottsch.forge.gmm.core.entity.monster;
 
 import mod.gottsch.forge.gmm.core.config.MobConfigHelper;
+import mod.gottsch.forge.gmm.core.entity.ai.goal.HuntingBreakDoorGoal;
 import mod.gottsch.forge.gmm.core.entity.ai.goal.ThrowProjectileGoal;
 import mod.gottsch.forge.gmm.core.tag.GMMTags;
 import net.minecraft.nbt.CompoundTag;
@@ -46,6 +47,42 @@ import java.util.Random;
  * item tag. The thrown projectile is supplied entirely by the consumer via {@link #rockLauncher}, so
  * this class has no knowledge of any concrete projectile -- it stays in the shared library.
  *
+ * <h2>Registering it: keep the width UNDER 1.0 if it has to use doorways</h2>
+ * <p>GMM registers no entity types, so the hitbox is the consumer's call -- and the obvious 1.0 is
+ * the wrong one. Vanilla's ground pathfinder sizes a mob as {@code Mth.floor(bbWidth + 1.0F)} blocks
+ * ({@code NodeEvaluator#prepare}), so a width of exactly 1.0 counts as <em>two</em> blocks and the
+ * orc stalls at every 1-wide doorway or corridor. Register it at {@code sized(0.9F, 1.99F)}: that
+ * floors to one block, and nothing in GMM reads the width in a way that changes how the orc looks or
+ * fights (checked 2026-10-24):</p>
+ * <ul>
+ *   <li>Melee reach is vanilla's {@code (2w)^2 + targetWidth}: about 2.14 blocks centre-to-centre
+ *       against a player at 1.0, 1.96 at 0.9. The gap between the two hitboxes at the moment of
+ *       the swing shrinks by only 0.13 of a block, and a player's 3-block reach out-ranges the orc
+ *       either way. The ranged orc's point-blank fallback ({@link ThrowProjectileGoal}) uses the
+ *       same formula and moves by the same amount.</li>
+ *   <li>{@code OrcRenderer} uses a fixed 0.8 shadow and {@code OrcModel} never reads the hitbox. The
+ *       rig's shoulders are already 1.25 blocks across, wider than either hitbox.</li>
+ * </ul>
+ * <p>Two caveats. A <em>door block</em> is narrower than its cell: an open door's panel takes 3px,
+ * and a mob walking the cell centre clears it only at width 0.625 or less (a vanilla zombie's 0.6
+ * just fits). 0.9 passes an empty 1-wide opening, not one with a door in it -- worked out from the
+ * collision shapes, not measured in game. And height counts too: 1.99 fits a 2-high doorway.</p>
+ *
+ * <h2>Doors</h2>
+ * <p>Opt-in per entity id: with the {@code gmm:mob_config} flag {@code breakDoors} set, an orc that
+ * has a target breaks wooden doors in its way (closed ones, and open ones it is too wide to get
+ * past) via {@link HuntingBreakDoorGoal}, on any difficulty. Without a target it treats doors as
+ * walls. Off by default, because door-breaking is griefing and a consumer's overworld orcs should
+ * not start smashing village doors on a library update; a dungeon consumer turns it on for its own
+ * orcs:</p>
+ * <pre>{@code
+ * // data/<consumer>/gmm/mob_config/orc.json
+ * { "flags": { "breakDoors": true }, "properties": { "doorBreakTime": 240 } }
+ * }</pre>
+ * <p>{@code doorBreakTime} is in ticks (default 240, vanilla's zombie time). Each subclass reads its
+ * own entity id, so the Shaman and Warlord need their own files. It needs the {@code mobGriefing}
+ * game rule on, and iron doors stop it.</p>
+ *
  * @author Mark Gottschling on Apr 27, 2022
  */
 public class Orc extends GMMMonster {
@@ -80,6 +117,16 @@ public class Orc extends GMMMonster {
      */
     public static ThrowProjectileGoal.ProjectileLauncher projectileLauncher;
 
+    /** Vanilla's zombie door-break time: 12 seconds of hacking before the door gives way. */
+    private static final int DEFAULT_DOOR_BREAK_TIME = 240;
+
+    /**
+     * Set in {@link #registerGoals()}, which the {@code Mob} constructor calls before this class's
+     * field initializers run -- so this field must NOT have an initializer, or it would wipe the goal
+     * out again. Null when the {@code breakDoors} config flag is off.
+     */
+    private HuntingBreakDoorGoal breakDoorGoal;
+
     private final MeleeAttackGoal meleeGoal = new MeleeAttackGoal(this, 1.0D, false);
     private final ThrowProjectileGoal throwGoal =
             new ThrowProjectileGoal(this, 1.0D, 40, 16F, mob -> ((Orc) mob).isRanged(), projectileLauncher);
@@ -93,6 +140,14 @@ public class Orc extends GMMMonster {
     @Override
     protected void registerGoals() {
         // NOTE Boulder-avoidance is injected consumer-side (gmm owns no Boulder); see DD CommonSetup.
+        // Smash through wooden doors to reach a target. OFF by default: it is griefing, so a consumer
+        // opts in per entity id (Dungeons2's dungeon orcs do; Dungeon Denizens' overworld ones don't).
+        // Declares no flags, so it runs alongside the attack goal rather than competing with it.
+        if (MobConfigHelper.get(this).flag("breakDoors", false)) {
+            this.breakDoorGoal = new HuntingBreakDoorGoal(this,
+                    () -> (int) MobConfigHelper.get(this).number("doorBreakTime", DEFAULT_DOOR_BREAK_TIME));
+            this.goalSelector.addGoal(1, this.breakDoorGoal);
+        }
         // the priority-4 attack goal (melee or throwing) is added by reassessWeaponGoal() based on isRanged()
         this.goalSelector.addGoal(5, new MoveThroughVillageGoal(this, 1.0D, true, 4, () -> true));
         this.goalSelector.addGoal(6, new WaterAvoidingRandomStrollGoal(this, 1.0D));
@@ -110,6 +165,15 @@ public class Orc extends GMMMonster {
                 .add(Attributes.MAX_HEALTH, 25.0)
                 .add(Attributes.FOLLOW_RANGE, 20.0)
                 .add(Attributes.MOVEMENT_SPEED, 0.25F);
+    }
+
+    /** Lets the pathfinder plan through closed doors only while hunting; see {@link HuntingBreakDoorGoal}. */
+    @Override
+    protected void customServerAiStep() {
+        super.customServerAiStep();
+        if (this.breakDoorGoal != null) {
+            this.breakDoorGoal.updateNavigation();
+        }
     }
 
     @Override

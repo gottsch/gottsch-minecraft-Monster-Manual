@@ -5,9 +5,36 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.1.0] - 2026-08-20
+## [1.1.0] - 2026-10-09
 
 ### Added
+- 🔥 **Ember Hound** — a wolf-shaped hound made entirely of embers, imported from Mage Flame. Only
+  the rig and texture came over; Mage Flame's summoned-companion behaviour did not, so here it is a
+  plain hostile mob. It hunts like a wolf (leaps in, then bites), and the bite sets the target alight
+  for 4 s. It trails flame and smoke and renders full-bright. Being fire, it is fire-immune whatever
+  the consumer's `EntityType.Builder` says. Stats are anchored to a tamed wolf (20 HP, 4 bite, 0.3
+  speed) rather than Mage Flame's 40 / 8, which was tuned as a player's ally.
+
+  It is a minor fire elemental in hound shape, not a Hell Hound (that fiend, with its breath and
+  pack tactics, is kept for a future canine family). Its three abilities are the D&D fire
+  elemental's, translated:
+  - **Fire Form** — a creature that hits it in melee from within 3 blocks is set alight for 3 s.
+    Projectiles are safe, so the answer is a bow.
+  - **Stoked** — standing in fire or lava heals it 1 HP a second and dries it off at once.
+  - **Doused** — water, rain or a splash water bottle douses it: no ignition from its bite or Fire
+    Form, −30% speed, its glow drops to world light and its coat darkens, and it only steams. It
+    stays doused 5 s after leaving the water, or 10 s after a splash bottle. This *replaces* a
+    Blaze's water damage, which would kill an overworld mob in its first rain shower.
+    `isSensitiveToWater()` still returns true, because that is the only way vanilla's splash bottle
+    finds a mob; the 1.0 `DROWN` tick it causes is cancelled in `hurt`, which tells it from real
+    drowning (2.0).
+
+  `gmm:mob_config` knobs: `igniteOnHit`, `meleeFireSeconds`, `fireForm`, `fireFormSeconds`,
+  `stoked`, `stokeHeal`, `stokeInterval`, `doused`, `wetDousedTicks`, `splashDousedTicks`,
+  `dousedSlow`, and `hurtByWater` (off by default; on brings back the Blaze-style damage).
+  Mage Flame's `EmberHoundGlowLayer` was not ported: it was never attached to the renderer, and its
+  texture (`emberhound_glow.png`) does not exist.
+
 - 🗿 **Stone Colossus** — a tall, lean armoured construct that stands as scenery until someone walks
   up to it. Slow, immovable (knockback resistance 1.0) and heavily armoured rather than
   high-health: 120 HP behind 14 armour and 6 toughness, a low attack rate, and speed under the
@@ -303,6 +330,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   outer layer: a black pudding is opaque.
 
 ### Changed
+- 🚪 **Orcs can break doors to reach a target — opt-in per entity id.** With the `gmm:mob_config`
+  flag `breakDoors` set (under `"flags"`), an `Orc`, Orc Shaman or Orc Warlord breaks wooden doors in
+  its way while it has a target, on any difficulty, through the new `HuntingBreakDoorGoal`. With no
+  target it treats doors as walls, so wandering orcs do not plan paths into doors they will not
+  break. It also breaks an *open* door when the mob is too wide to get past the panel (over 0.625):
+  a door-walking orc registered at 0.9 would otherwise jam against it. **Off by default**, so a
+  consumer's overworld orcs keep leaving village doors alone; a dungeon consumer turns it on for its
+  own entity ids (each of the three reads its own). Needs the `mobGriefing` game rule; iron doors
+  stop it. `doorBreakTime` (under `"properties"`, ticks, default 240 like a zombie; unlike vanilla,
+  values under 240 are honoured).
+
+  **Consumers: register orcs under 1.0 wide (0.9).** The pathfinder sizes a mob as
+  `floor(width + 1)` blocks, so at exactly 1.0 an orc counts as two blocks wide and never plans a
+  path through a 1-wide doorway, so it never reaches the door to break it. See `Orc`'s javadoc.
+
 - 🛡️ **Six spells now carry their caster: Harm, Disintegrate, Fire Spout, Firewall Column, Spike
   Growth and Withering Gaze.** Each hurts through the new `source(level, key, this, owner)`. Until
   now **no shield could block any of them**, whichever way the player faced — see the `source`
