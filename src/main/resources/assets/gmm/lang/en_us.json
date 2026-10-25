@@ -11,5 +11,11 @@
   "subtitles.gmm.entity.mimic.ambient": "Mimic rattles",
   "effect.gmm.withered": "Withered",
   "effect.gmm.shrieker_darkness": "Shrieker's Darkness",
-  "effect.gmm.paralyzed": "Paralyzed"
+  "effect.gmm.paralyzed": "Paralyzed",
+  "effect.gmm.leeched": "Leeched",
+  "message.gmm.leech.attached": "A leech! You can't heal. Sneak + use: a torch burns it off, a bare hand on a block rips it off.",
+  "death.attack.gmm.leech_drain": "%1$s was bled dry by a leech",
+  "death.attack.gmm.leech_drain.player": "%1$s was bled dry by a leech while fighting %2$s",
+  "death.attack.gmm.leech_rip": "%1$s tore a leech off and bled out",
+  "death.attack.gmm.leech_rip.player": "%1$s tore a leech off and bled out while fighting %2$s"
 }

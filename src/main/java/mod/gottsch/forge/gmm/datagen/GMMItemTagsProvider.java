@@ -86,6 +86,9 @@ public class GMMItemTagsProvider extends ItemTagsProvider {
 		// uses to ward off its own gaze-based aggro. Consumers add their own ward items additively.
 		tag(GMMTags.Items.BODAK_GAZE_WARD).add(Items.CARVED_PUMPKIN);
 
+		// Leech burners: anything a player already carries into a dungeon that makes a flame.
+		tag(GMMTags.Items.LEECH_BURNERS).add(Items.TORCH, Items.SOUL_TORCH, Items.FLINT_AND_STEEL, Items.FIRE_CHARGE);
+
 		// Skeleton Champion weapon pool: an elite leader carries elite steel — diamond + netherite
 		// swords by default. Consumers add their own (fancier) weapons additively.
 		tag(GMMTags.Items.SKELETON_CHAMPION_WEAPONS).add(Items.DIAMOND_SWORD, Items.NETHERITE_SWORD);

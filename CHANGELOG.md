@@ -8,6 +8,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.1.0] - 2026-10-09
 
 ### Added
+- 🩸 **Leech and Giant Leech** — a water ambusher that does not bite. One class, `Leech`, for two
+  tiers, registered by the consumer the `Rat` / `giant_rat` way (`sized(WIDTH, HEIGHT)` and
+  `sized(WIDTH, HEIGHT * 2)`, the giant rendered with `new LeechRenderer<>(context, 2.0F)`). A leech
+  swims at a player in its water and **attaches** on contact. It stays on when they climb out, and
+  while any leech is on a player they **cannot heal at all** (the new `gmm:leeched` effect, whose
+  level shows how many). It falls off fed after 60 s (giant 90 s), growing visibly as it feeds.
+  - **Small:** up to 5 per player; iron-or-better leggings make 80% of attempts bounce off.
+  - **Giant:** one per player; ignores armour; also gives Slowness I and drains 1 HP every 4 s.
+  - **Getting them off:** catching fire burns them all off; sneak + use a torch, soul torch, flint
+    and steel or fire charge (`gmm:leech/burners`) burns one off; sneak + use an empty hand on a block
+    rips one off for 2 health (giant 6), through armour; another player right-clicking you pulls one
+    off for free. A 1 s cooldown applies to each. The first attach shows the controls in the action
+    bar.
+  - Attached leeches are world entities placed on body sockets (shins, thighs, belly, back; the
+    giant down the back), so a player sees the ones on their legs by looking down in first person.
+  - Swimming boxes are 0.75 and 0.9 long, under 1.0 so the pathfinder can use 1-wide channels.
+  - `gmm:mob_config` keys, per entity id, defaults by tier: `maxAttached`, `ignoresArmor`,
+    `armorThreshold`, `armorBounceChance`, `feedTicks`, `drainAmount`, `drainInterval`, `slows`,
+    `ripDamage`, `reattachCooldown`, `satedTicks`.
+  - Consumer contract: `Leech.createAttributes()`, `Leech.createGiantAttributes()`, `Leech.WIDTH`,
+    `Leech.HEIGHT`, `LeechModel.LAYER_LOCATION` / `createBodyLayer()`, `LeechRenderer(context[,
+    texture][, scale])`. Textures `gmm:textures/entity/leech.png` and an optional darker
+    `giant_leech.png`.
 - 🔥 **Ember Hound** — a wolf-shaped hound made entirely of embers, imported from Mage Flame. Only
   the rig and texture came over; Mage Flame's summoned-companion behaviour did not, so here it is a
   plain hostile mob. It hunts like a wolf (leaps in, then bites), and the bite sets the target alight

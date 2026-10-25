@@ -69,6 +69,10 @@ public class GMMTags {
         // can add their own dedicated ward item (blindfold/goggles/etc.) additively.
         public static final TagKey<Item> BODAK_GAZE_WARD = mod(GMM.MOD_ID, "bodak/gaze_ward");
 
+        // Leech burners: sneak + use one of these to burn a leech off yourself (see LeechEvents). gmm
+        // ships torches, flint and steel and fire charges; consumers add their own additively.
+        public static final TagKey<Item> LEECH_BURNERS = mod(GMM.MOD_ID, "leech/burners");
+
         // Shadow spawn weapon pool (consumer-populated)
         public static final TagKey<Item> SHADOW_WEAPONS = mod(GMM.MOD_ID, "shadow/weapons");
         // Shadow-bane weapons: bypass the Shadow's metal resistance and deal bonus damage.

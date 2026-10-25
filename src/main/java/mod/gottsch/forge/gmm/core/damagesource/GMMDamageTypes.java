@@ -46,6 +46,11 @@ public class GMMDamageTypes {
     // Bodak's Withering Gaze (WitheringGazeSpell) -- the ranged, no-windup necrotic bolt companion to
     // Death Gaze's melee-range stare.
     public static final ResourceKey<DamageType> WITHERING_GAZE_SPELL = register("withering_gaze_spell");
+    // Leech (core.entity.monster.Leech). Both bypass armour (data/minecraft/tags/damage_type/
+    // bypasses_armor.json): the drain is from inside the armour, and ripping one off is the player's
+    // own doing, so plate must not make it free.
+    public static final ResourceKey<DamageType> LEECH_DRAIN = register("leech_drain");
+    public static final ResourceKey<DamageType> LEECH_RIP = register("leech_rip");
 
     private static ResourceKey<DamageType> register(String name) {
         return ResourceKey.create(Registries.DAMAGE_TYPE, new ResourceLocation(GMM.MOD_ID, name));

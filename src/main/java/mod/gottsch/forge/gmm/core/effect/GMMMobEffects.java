@@ -63,6 +63,16 @@ public class GMMMobEffects {
                     .addAttributeModifier(Attributes.MOVEMENT_SPEED, "b7b0b1b2-9c3d-4e2a-8f1a-2d6e4c9a7b1f",
                             -1.0D, AttributeModifier.Operation.MULTIPLY_TOTAL));
 
+    /**
+     * A pure marker effect: "a leech is on you, and you cannot heal." {@code Leech} renews it every
+     * second for a little over that while attached, at amplifier = leeches on the victim minus one, so
+     * the HUD shows how many there are. {@code LeechEvents} cancels every {@code LivingHealEvent} while
+     * it is present. Because the leech renews it rather than the victim tracking a count, a leech lost
+     * to a chunk unload or logout just lets it lapse.
+     */
+    public static final RegistryObject<MobEffect> LEECHED = EFFECTS.register("leeched",
+            () -> new MobEffect(MobEffectCategory.HARMFUL, 0x5A1414) {});
+
     /** Called from the GMM constructor to attach the registry to the mod event bus. */
     public static void register(IEventBus modEventBus) {
         EFFECTS.register(modEventBus);
