@@ -368,6 +368,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `floor(width + 1)` blocks, so at exactly 1.0 an orc counts as two blocks wide and never plans a
   path through a 1-wide doorway, so it never reaches the door to break it. See `Orc`'s javadoc.
 
+  **Once an orc starts on a door, it finishes.** It needs a target to start, but not to carry on:
+  a shut door blocks the orc's sight, and a mob forgets a target it cannot see after 3 seconds, so
+  without this it gave up long before the door broke. **Any wooden door counts**, not only vanilla
+  door blocks: a modded door that tells the pathfinder it is a shut wooden door (Forge's
+  `getBlockPathType`) is found and broken too, such as DungeonBlocks' three- and four-tall doors.
+
 - 🛡️ **Six spells now carry their caster: Harm, Disintegrate, Fire Spout, Firewall Column, Spike
   Growth and Withering Gaze.** Each hurts through the new `source(level, key, this, owner)`. Until
   now **no shield could block any of them**, whichever way the player faced — see the `source`

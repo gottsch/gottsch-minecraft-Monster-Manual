@@ -71,7 +71,8 @@ public class Minotaur extends GMMMonster implements IChargingMob {
     //
     // The windup is the price of the hit and the player's window to move. It was 20 -- a full
     // second of standing still, which read as hesitation rather than as a wind-up. 12 on
-    // 2026-09-09, still long enough to be a tell and to turn away from.
+    // 2026-09-09, still long enough to be a tell and to turn away from. 8 on 2026-10-25 (Mark,
+    // after fighting one in the dungeon's hallways): even 12 read as a pause in a tight space.
     //
     // NOTE THIS COMPOUNDS WITH CHARGE_SPEED, which went up the same day. Shorter windup and faster
     // run both cut the time the player has, so the next playtest of either is really a playtest of
@@ -80,7 +81,7 @@ public class Minotaur extends GMMMonster implements IChargingMob {
     private static final double CHARGE_RANGE_MIN = 5.0D;
     private static final double CHARGE_RANGE_MAX = 16.0D;
     private static final double CHARGE_HIT_RANGE = 2.6D;
-    private static final int CHARGE_WINDUP_TICKS = 12;
+    private static final int CHARGE_WINDUP_TICKS = 8;
     private static final int CHARGE_MAX_TICKS = 60;
     private static final int CHARGE_COOLDOWN_TICKS = 160;
     // Retuned 2026-09-07 after playtesting: the charge was killing an unarmored player outright.
