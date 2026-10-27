@@ -373,6 +373,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   without this it gave up long before the door broke. **Any wooden door counts**, not only vanilla
   door blocks: a modded door that tells the pathfinder it is a shut wooden door (Forge's
   `getBlockPathType`) is found and broken too, such as DungeonBlocks' three- and four-tall doors.
+  **An orc remembers its quarry for 10 seconds and breaks the door in the way.** It no longer
+  needs the door on its planned path: stopped within a block and a half of a door that stands
+  between it and where its quarry was, it hacks at it. Before, an orc that saw you through a door
+  too narrow for it, or lost sight of you as the door shut, often just stood there.
 
 - 🛡️ **Six spells now carry their caster: Harm, Disintegrate, Fire Spout, Firewall Column, Spike
   Growth and Withering Gaze.** Each hurts through the new `source(level, key, this, owner)`. Until
