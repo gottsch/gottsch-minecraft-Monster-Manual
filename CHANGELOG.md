@@ -8,6 +8,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.1.0] - 2026-10-09
 
 ### Added
+- 🐺 **Canine family** — wolf-rigged pack hunters from D&D, on one shared base, `GMMCanine`
+  (`core.entity.monster.canine`). The Ember Hound is not one of them and is unchanged: it is a fire
+  elemental in hound shape and keeps none of the family's breath, pack or howl.
+  - **Packs spawn together.** Each canine returns its `gmm:<mob>/companions` tag from
+    `getCompanionPool()`, so a natural spawn brings 1-2 more (GMMMonster's companion keys:
+    `spawnCompanions`, `companionChance`, `companionMin`, `companionMax`).
+  - **The howl.** When one picks out a player or is hurt, it howls and every idle mob in its
+    `gmm:<mob>/pack` tag within `howlRange` takes the same target. The pack is always alerted; only
+    the sound is held to `howlCooldown`.
+  - **Pack Tactics.** A bite does `packTacticsMultiplier` times damage while another living pack
+    mate is within `packTacticsRange` blocks of the target. The bonus is a transient attribute
+    modifier on that one bite, so vanilla's damage maths sees it.
+  - `gmm:mob_config` keys, every canine: `packTactics` (flag, true), `packTacticsMultiplier` (1.25),
+    `packTacticsRange` (3.0), `howl` (flag, true), `howlRange` (16.0), `howlCooldown` (200 ticks).
+  - Shared rig `CanineModel` (vanilla wolf geometry and UVs, 64x32, layer `gmm:canine#main`) and
+    `CanineRenderer(context, texture, scale, eyesTexture)`.
+- 🌬️ **`BreathAttackGoal`** — a breath weapon for any `Mob & IBreathingMob`. A forward cone, aimed
+  once at the target as it stood when the breath began and never tracking, so stepping sideways is
+  the counterplay. Everything in the cone at any tick of the breath is hurt **once**, with line of
+  sight; the mob's own allies (`IBreathingMob#isBreathAlly`) are spared. Once spent it recharges
+  D&D-style ("recharge 5-6"): a `breathRechargeChance` roll every `breathRechargeInterval` ticks,
+  about six seconds on average at the defaults. Per-mob keys, with code defaults the mob passes in:
+  `breath` (flag), `breathRange`, `breathAngle` (half-angle, degrees), `breathDuration`,
+  `breathDamage`, `breathRechargeInterval`, `breathRechargeChance`.
+  Two data-driven damage types go with it, named for the element so the next breather reuses them:
+  `gmm:fire_breath` (in `minecraft:is_fire`: fire-immune mobs ignore it, Fire Protection reduces it)
+  and `gmm:frost_breath` (in `minecraft:is_freezing`), each with a death message.
 - 🩸 **Leech and Giant Leech** — a water ambusher that does not bite. One class, `Leech`, for two
   tiers, registered by the consumer the `Rat` / `giant_rat` way (`sized(WIDTH, HEIGHT)` and
   `sized(WIDTH, HEIGHT * 2)`, the giant rendered with `new LeechRenderer<>(context, 2.0F)`). A leech

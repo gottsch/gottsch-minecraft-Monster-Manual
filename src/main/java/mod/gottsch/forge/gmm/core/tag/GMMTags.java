@@ -156,6 +156,20 @@ public class GMMTags {
         // sensible vanilla stand-in for a Beholder-kin minion); consumers populate it entirely.
         public static final TagKey<EntityType<?>> BEHOLDER_COMPANIONS = mod(GMM.MOD_ID, "beholder/companions");
 
+        // --- canine family (GMMCanine) -----------------------------------------------------------
+        // Per mob, two tags each. PACK is who counts as this canine's pack mate: the mobs its howl
+        // pulls in, the mobs whose presence beside its target triggers Pack Tactics, and the mobs its
+        // breath spares. COMPANIONS is who may spawn with it as a pack (GMMMonster#getCompanionPool).
+        // Separate because a consumer may well want a Hellhound to fight beside other fiends without
+        // spawning with them. gmm ships both empty, since the entity types are the consumer's: put
+        // at least the mob itself in each, or its pack never forms and never hunts as one.
+        public static final TagKey<EntityType<?>> DIRE_WOLF_PACK = mod(GMM.MOD_ID, "dire_wolf/pack");
+        public static final TagKey<EntityType<?>> DIRE_WOLF_COMPANIONS = mod(GMM.MOD_ID, "dire_wolf/companions");
+        public static final TagKey<EntityType<?>> HELLHOUND_PACK = mod(GMM.MOD_ID, "hellhound/pack");
+        public static final TagKey<EntityType<?>> HELLHOUND_COMPANIONS = mod(GMM.MOD_ID, "hellhound/companions");
+        public static final TagKey<EntityType<?>> WINTER_WOLF_PACK = mod(GMM.MOD_ID, "winter_wolf/pack");
+        public static final TagKey<EntityType<?>> WINTER_WOLF_COMPANIONS = mod(GMM.MOD_ID, "winter_wolf/companions");
+
         // --- category tags -----------------------------------------------------------------------
         // Cross-cutting, not scoped to one mob -- a `gmm:category/*` tag every consumer of "who counts
         // as X" logic can share, instead of every mob re-enumerating its own roster (the every-tag-is-

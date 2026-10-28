@@ -17,5 +17,7 @@
   "death.attack.gmm.leech_drain": "%1$s was bled dry by a leech",
   "death.attack.gmm.leech_drain.player": "%1$s was bled dry by a leech while fighting %2$s",
   "death.attack.gmm.leech_rip": "%1$s tore a leech off and bled out",
-  "death.attack.gmm.leech_rip.player": "%1$s tore a leech off and bled out while fighting %2$s"
+  "death.attack.gmm.leech_rip.player": "%1$s tore a leech off and bled out while fighting %2$s",
+  "death.attack.gmm.fire_breath": "%1$s was burned to ash by %2$s's breath",
+  "death.attack.gmm.frost_breath": "%1$s was frozen solid by %2$s's breath"
 }

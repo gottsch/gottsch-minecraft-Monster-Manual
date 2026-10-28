@@ -51,6 +51,12 @@ public class GMMDamageTypes {
     // own doing, so plate must not make it free.
     public static final ResourceKey<DamageType> LEECH_DRAIN = register("leech_drain");
     public static final ResourceKey<DamageType> LEECH_RIP = register("leech_rip");
+    // Breath weapons (core.entity.ai.goal.BreathAttackGoal): the Hellhound's and the Winter Wolf's.
+    // Named for the element, not the mob, so the next breather reuses them. fire_breath is in
+    // minecraft:is_fire (fire-immune mobs ignore it, Fire Protection reduces it) and frost_breath in
+    // minecraft:is_freezing (blazes, striders and magma cubes take extra).
+    public static final ResourceKey<DamageType> FIRE_BREATH = register("fire_breath");
+    public static final ResourceKey<DamageType> FROST_BREATH = register("frost_breath");
 
     private static ResourceKey<DamageType> register(String name) {
         return ResourceKey.create(Registries.DAMAGE_TYPE, new ResourceLocation(GMM.MOD_ID, name));
