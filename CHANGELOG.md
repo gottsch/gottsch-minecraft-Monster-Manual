@@ -39,6 +39,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     `breathAngle` 30, `breathDuration` 30, `breathDamage` 6, `breathRechargeInterval` 40,
     `breathRechargeChance` 0.333; plus `breathFireSeconds` (4). Textures
     `gmm:textures/entity/hellhound.png` and `layer/hellhound_eyes.png`.
+  - **Winter Wolf** — large, white and pale blue, with full-bright ice-blue eyes; 0.85 x 1.2 at
+    renderer scale 1.4. 36 HP, 6 bite, 0.3 speed, 2 armour, 0.3 knockback resistance. **Frost
+    breath** (`gmm:frost_breath`) that chills whoever it catches exactly as the Frost Skeleton's blow
+    does (Slowness plus vanilla's powder-snow freeze shiver); cannot freeze, so powder snow and
+    freezing never hurt it. Breath defaults as the Hellhound's but `breathRange` 6; plus
+    `breathSlowTicks` (100), `breathSlowAmplifier` (1), `breathFreezeTicks` (140). Textures
+    `gmm:textures/entity/winter_wolf.png` and `layer/winter_wolf_eyes.png`.
+  - Placeholder textures: vanilla's wolf texture recoloured through a fixed 0-255 luminance ramp
+    per mob, so the UVs match the rig exactly. Fine to repaint.
+  - **Consumer contract** (GMM registers none of these): entity types sized from each mob's
+    `WIDTH`/`HEIGHT`, attributes from `createAttributes()`, the model layer
+    `CanineModel.LAYER_LOCATION` with `CanineModel::createBodyLayer`, renderers `DireWolfRenderer::new`,
+    `HellhoundRenderer::new`, `WinterWolfRenderer::new`, and the six tags
+    `gmm:{dire_wolf,hellhound,winter_wolf}/{pack,companions}`, which gmm ships empty: put at least the
+    mob itself in each.
 - 🌬️ **`BreathAttackGoal`** — a breath weapon for any `Mob & IBreathingMob`. A forward cone, aimed
   once at the target as it stood when the breath began and never tracking, so stepping sideways is
   the counterplay. Everything in the cone at any tick of the breath is hurt **once**, with line of
