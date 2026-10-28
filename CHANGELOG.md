@@ -30,6 +30,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     A target already rooted is not rooted again, and each wolf has its own cooldown, so a pack can
     pin a player but not chain-lock one. Keys: `prone` (flag, true), `proneChance` (0.3),
     `proneTicks` (20), `proneCooldown` (100). Texture `gmm:textures/entity/dire_wolf.png`.
+  - **Hellhound** — the D&D fiend: a black hound with ember markings and full-bright eyes (only the
+    eyes; the coat takes world light), 0.7 x 0.95 at renderer scale 1.1. 28 HP, 5 bite, 0.33 speed,
+    4 armour. **Fire breath** (`gmm:fire_breath`) that sets whoever it catches alight; immune to fire
+    and lava whatever the consumer's builder says, and paths through fire. Distinct from the Ember
+    Hound in every way that shows: flesh rather than embers, an ordinary bite, unaffected by water,
+    and the breath, pack and howl the Ember Hound does not have. Breath defaults: `breathRange` 5,
+    `breathAngle` 30, `breathDuration` 30, `breathDamage` 6, `breathRechargeInterval` 40,
+    `breathRechargeChance` 0.333; plus `breathFireSeconds` (4). Textures
+    `gmm:textures/entity/hellhound.png` and `layer/hellhound_eyes.png`.
 - 🌬️ **`BreathAttackGoal`** — a breath weapon for any `Mob & IBreathingMob`. A forward cone, aimed
   once at the target as it stood when the breath began and never tracking, so stepping sideways is
   the counterplay. Everything in the cone at any tick of the breath is hurt **once**, with line of
