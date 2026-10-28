@@ -24,6 +24,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     `packTacticsRange` (3.0), `howl` (flag, true), `howlRange` (16.0), `howlCooldown` (200 ticks).
   - Shared rig `CanineModel` (vanilla wolf geometry and UVs, 64x32, layer `gmm:canine#main`) and
     `CanineRenderer(context, texture, scale, eyesTexture)`.
+  - **Dire Wolf** — a pony-sized wolf, 1.3x vanilla (`DireWolf.WIDTH`/`HEIGHT` 0.8 x 1.1, renderer
+    scale 1.3). 30 HP, 6 bite, 0.32 speed, 2 armour, 0.2 knockback resistance, 24 follow range. No
+    breath; its bite can knock a target **prone**: a brief full root (the existing `gmm:paralyzed`).
+    A target already rooted is not rooted again, and each wolf has its own cooldown, so a pack can
+    pin a player but not chain-lock one. Keys: `prone` (flag, true), `proneChance` (0.3),
+    `proneTicks` (20), `proneCooldown` (100). Texture `gmm:textures/entity/dire_wolf.png`.
 - 🌬️ **`BreathAttackGoal`** — a breath weapon for any `Mob & IBreathingMob`. A forward cone, aimed
   once at the target as it stood when the breath began and never tracking, so stepping sideways is
   the counterplay. Everything in the cone at any tick of the breath is hurt **once**, with line of
