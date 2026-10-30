@@ -36,6 +36,13 @@ import mod.gottsch.forge.gmm.core.sound.GMMSounds;
  * Generalized from Dungeon Denizens. GMM owns no concrete firespout projectile, so
  * {@link DaemonShootSpellsGoal} launches through the consumer-supplied {@link #fireSpoutLauncher}
  * static hook (same shape as {@code Orc#projectileLauncher}).
+ * <p>
+ * Hitbox: at 1.0 wide the pathfinder counts it as two blocks ({@code floor(width + 1)}, see
+ * {@link Orc}), so it does not path through 1-wide doorways, and it needs a doorway as tall as its
+ * hitbox besides. Its melee is vanilla's {@code MeleeAttackGoal}, so narrowing it to 0.9 takes its
+ * reach against a player from about 2.14 blocks to 1.96. ({@code DaemonShootSpellsGoal} has its own
+ * width-based {@code getAttackReachSqr}, but nothing calls it: the spell goal gates on the fixed
+ * {@code MELEE_DISTANCE_SQUARED}.)
  *
  * @author Mark Gottschling on 7/1/2026
  */

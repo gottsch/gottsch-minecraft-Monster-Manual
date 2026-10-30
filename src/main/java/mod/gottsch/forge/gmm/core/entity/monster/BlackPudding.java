@@ -20,7 +20,10 @@ import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EntityDimensions;
+import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.MobSpawnType;
+import net.minecraft.world.entity.SpawnGroupData;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
@@ -33,7 +36,10 @@ import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.block.state.BlockState;
+
+import javax.annotation.Nullable;
 
 /**
  * The deadliest and fastest of the ooze family — where {@link GelatinousCube} is a snail-slow trap you
@@ -54,9 +60,12 @@ import net.minecraft.world.level.block.state.BlockState;
  * (use anything else — a pickaxe, a fist, fire) instead of punishing them for fighting back at all.</li>
  * </ul>
  * Unlike {@link OchreJelly}'s strictly linear split (children can never split), a pudding's children
- * <em>can</em> split again — but {@link #generation} caps the chain at {@code maxGeneration} (default 3)
- * and each generation halves max health, so the swarm feels open-ended in play while provably
- * terminating. Children are also strictly weaker in kind, not just in numbers: only generation 0 can
+ * <em>can</em> split again. Two caps keep that terminating: each pudding has its own budget of
+ * {@code maxSplits} splits (default 1, see {@link #splitsRemaining}), and {@link #getGeneration generation}
+ * stops the chain at {@code maxGeneration} (default 3). Each generation also halves max health. With
+ * {@code s = maxSplits} and {@code G = maxGeneration}, a single adult yields at most
+ * {@code s + s^2 + ... + s^G} descendants: {@code G} when {@code s = 1} (default: 3), otherwise
+ * {@code s(s^G - 1)/(s - 1)} (e.g. 14 for {@code s = 2}). Children are also strictly weaker in kind, not just in numbers: only generation 0 can
  * lash ({@link #hasLash}), so only the adult gets the extended reach, and children render visibly
  * smaller. That keeps a corridor full of puddings from becoming an unbroken wall of long-reach
  * attackers with no gap to retreat through.
@@ -74,6 +83,7 @@ public class BlackPudding extends GMMMonster {
     /** Extra melee reach in blocks, on top of the vanilla range. Adults only — see {@link #hasLash}. */
     private static final double DEFAULT_REACH_BONUS = 1.0D;
     private static final int DEFAULT_MAX_GENERATION = 3;
+    private static final int DEFAULT_MAX_SPLITS = 1;
     private static final double DEFAULT_SPLIT_HEALTH_FRACTION = 0.5D;
     // same self-imposed gate the rest of the family uses — see GelatinousCube#doHurtTarget for why
     private static final int DEFAULT_ATTACK_COOLDOWN = 30;
@@ -105,6 +115,13 @@ public class BlackPudding extends GMMMonster {
     /** How long the strike takes to recover, in ticks. Animation feel, so deliberately not config. */
     private static final int LASH_TICKS = 8;
 
+    /**
+     * How many more times <em>this</em> pudding may split. Without it, every sword hit a pudding survived
+     * spawned another child, so one adult became dozens. Filled from {@code maxSplits} at spawn and for
+     * each child in {@link #split}, decremented per split, and persisted so a chunk reload can't refill
+     * it. Server-only bookkeeping, like {@link OchreJelly}'s, so not synched.
+     */
+    private int splitsRemaining = DEFAULT_MAX_SPLITS;
     private int lastAttackTick = -1000;
     /** Client-only animation state; never read or written server-side. */
     private int lastSeenLashId;
@@ -112,6 +129,16 @@ public class BlackPudding extends GMMMonster {
 
     public BlackPudding(EntityType<? extends Monster> entityType, Level level) {
         super(entityType, level);
+    }
+
+    /** Reads the optional {@code maxSplits} config once at (natural/spawner/summon-goal) spawn. */
+    @Override
+    public SpawnGroupData finalizeSpawn(ServerLevelAccessor level, DifficultyInstance difficulty,
+                                         MobSpawnType spawnType, @Nullable SpawnGroupData spawnGroupData,
+                                         @Nullable CompoundTag tag) {
+        spawnGroupData = super.finalizeSpawn(level, difficulty, spawnType, spawnGroupData, tag);
+        this.splitsRemaining = maxSplits();
+        return spawnGroupData;
     }
 
     @Override
@@ -284,13 +311,13 @@ public class BlackPudding extends GMMMonster {
     }
 
     /**
-     * A splitting blow that this pudding survives spawns a child, provided the chain hasn't already hit
-     * {@code maxGeneration}.
+     * A splitting blow that this pudding survives spawns a child, provided this pudding still has a
+     * split left and the chain hasn't already hit {@code maxGeneration}.
      */
     @Override
     public boolean hurt(DamageSource source, float amount) {
         boolean hurt = super.hurt(source, amount);
-        if (hurt && this.isAlive()
+        if (hurt && this.isAlive() && this.splitsRemaining > 0
                 && MobConfigHelper.get(this).flag("split", true)
                 && getGeneration() < maxGeneration()
                 && isSplittingBlow(source)) {
@@ -301,6 +328,10 @@ public class BlackPudding extends GMMMonster {
 
     private int maxGeneration() {
         return (int) MobConfigHelper.get(this).number("maxGeneration", DEFAULT_MAX_GENERATION);
+    }
+
+    private int maxSplits() {
+        return Math.max(0, (int) MobConfigHelper.get(this).number("maxSplits", DEFAULT_MAX_SPLITS));
     }
 
     /**
@@ -331,20 +362,23 @@ public class BlackPudding extends GMMMonster {
     }
 
     /**
-     * Spawns one child alongside this one at the next generation down, with half the health. The child
-     * can split again in turn, but its own higher {@link #generation} brings the chain closer to the
-     * cap — so a single adult yields at most {@code 2^maxGeneration - 1} descendants, not an unbounded
-     * cascade.
+     * Spawns one child alongside this one at the next generation down, with half the health, and spends
+     * one of this pudding's splits. The child gets its own fresh {@code maxSplits} budget and can split
+     * again in turn, but its higher generation brings the chain closer to the cap. See the class javadoc
+     * for the resulting descendant bound.
      */
     private void split() {
         if (this.level().isClientSide) {
             return;
         }
+        this.splitsRemaining--;
         double healthFraction = MobConfigHelper.get(this).number("splitHealthFraction", DEFAULT_SPLIT_HEALTH_FRACTION);
 
         Entity spawned = this.getType().create(this.level());
         if (spawned instanceof BlackPudding child) {
             child.setGeneration(this.getGeneration() + 1);
+            // create() skips finalizeSpawn, so the child's budget has to be filled here
+            child.splitsRemaining = maxSplits();
             double newMaxHealth = Math.max(MIN_CHILD_HEALTH, this.getMaxHealth() * healthFraction);
             AttributeInstance healthAttribute = child.getAttribute(Attributes.MAX_HEALTH);
             if (healthAttribute != null) {
@@ -390,6 +424,7 @@ public class BlackPudding extends GMMMonster {
     public void addAdditionalSaveData(CompoundTag tag) {
         super.addAdditionalSaveData(tag);
         tag.putInt("Generation", this.getGeneration());
+        tag.putInt("SplitsRemaining", this.splitsRemaining);
     }
 
     @Override
@@ -397,6 +432,9 @@ public class BlackPudding extends GMMMonster {
         super.readAdditionalSaveData(tag);
         if (tag.contains("Generation")) {
             setGeneration(tag.getInt("Generation"));
+        }
+        if (tag.contains("SplitsRemaining")) {
+            this.splitsRemaining = tag.getInt("SplitsRemaining");
         }
     }
 }

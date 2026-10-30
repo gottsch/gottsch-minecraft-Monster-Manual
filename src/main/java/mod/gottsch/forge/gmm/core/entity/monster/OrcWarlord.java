@@ -76,6 +76,14 @@ import java.util.Optional;
  * in a consumer's setup, and neither announces its absence &mdash; which is the whole reason they
  * are listed here rather than left to be discovered.</p>
  *
+ * <h2>Hitbox</h2>
+ * <p>Register him at a plain orc's size, not 1.2x: the 1.2x is a render scale in
+ * {@code OrcWarlordRenderer} and only {@link #getStandingEyeHeight} follows it. The renderer's scale
+ * and shadow are constants and nothing reads his width, so the doorway rule on {@link Orc} applies
+ * unchanged &mdash; under 1.0 wide (0.9) or he cannot path through the doors his warband uses. The
+ * rally and {@link AvoidCrowdGoal} radii inflate his bounding box, so narrowing it 0.1 pulls them in
+ * by 0.05 of a block, which nobody will notice.</p>
+ *
  * @author Mark Gottschling on Sep 5, 2026
  */
 public class OrcWarlord extends Orc {

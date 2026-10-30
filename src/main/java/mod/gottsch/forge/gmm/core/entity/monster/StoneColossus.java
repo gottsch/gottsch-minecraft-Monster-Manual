@@ -53,6 +53,11 @@ import net.minecraft.world.level.Level;
  *
  * <p>Construct, not undead: immune to poison and wither, <em>not</em> immune to fire.
  *
+ * <p>Too big for doors, by design. At 1.0 wide or more the pathfinder counts it as two blocks
+ * ({@code floor(width + 1)}, see {@link Orc}), so it never paths through a 1-wide doorway, and its
+ * height rules one out anyway. Do not narrow it to make it fit: it reaches a player through
+ * {@link StalkGoal} and {@link TallMeleeAttackGoal}, whose reach comes from the hitbox width.
+ *
  * @author Mark Gottschling on 9/13/2026
  */
 public class StoneColossus extends GMMMonster implements IDormantMob, ISlammingMob, IBurstingMob, IHurlingMob {
@@ -210,8 +215,10 @@ public class StoneColossus extends GMMMonster implements IDormantMob, ISlammingM
                 .add(Attributes.ARMOR_TOUGHNESS, 6.0D)
                 .add(Attributes.FOLLOW_RANGE, 32.0D)
                 // slower than the Minotaur (0.23): the weight has to cost it something, and a boss
-                // you cannot walk away from is a boss with no shape to its fight
-                .add(Attributes.MOVEMENT_SPEED, 0.17D);
+                // you cannot walk away from is a boss with no shape to its fight. Raised from 0.17
+                // on 2026-09-17 -- at that speed backing out of its arena was free, which took the
+                // pressure off the fight rather than shaping it.
+                .add(Attributes.MOVEMENT_SPEED, 0.19D);
     }
 
     /**

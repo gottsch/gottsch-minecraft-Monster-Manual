@@ -29,6 +29,10 @@ import net.minecraft.world.level.Level;
  * (avg ~9 dmg); the same ratio is applied here to both {@code MAX_HEALTH} and {@code ATTACK_DAMAGE}
  * rather than to melee damage alone, since (unlike the source material) this variant is meant to be
  * frailer overall, not just weaker in melee.
+ * <p>
+ * Hitbox: the doorway rule on {@link Orc} applies (register under 1.0 wide). Narrowing it only
+ * shortens the point-blank fist range; {@link CastSpellGoal}'s minimum range is the configured
+ * {@code spellMinRange} (4 blocks), which outweighs the width-derived reach at either size.
  *
  * @author Mark Gottschling on Jul 9, 2026
  */
